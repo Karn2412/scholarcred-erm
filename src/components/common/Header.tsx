@@ -6,9 +6,9 @@ const Header = () => {
   const location = useLocation();
 
   // Define pages where search bar should be hidden
-  const hideSearchBarRoutes = ['/employees/add'];
+ const hideSearchBarRoutes = ['/employees'];
+const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
 
-  const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 border-b border-gray-200 space-y-4 sm:space-y-0">

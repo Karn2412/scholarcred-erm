@@ -6,6 +6,8 @@ import { FaBars } from 'react-icons/fa';
 import AddEmployeeStepper from '../../components/adminEmployee/addemployee/AddEmployeeStepper';
 import AddEmployeeForm from '../../components/adminEmployee/addemployee/AddEmployeeForm';
 import SalaryDetails from '../../components/adminEmployee/addemployee/SalaryDetails';
+import AssetAllocationForm from '../../components/adminEmployee/addemployee/AssetAllocationForm';
+import PaymentInformationForm from '../../components/adminEmployee/addemployee/PaymentInformationForm';
 
 const AddEmployeePage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,8 +20,13 @@ const AddEmployeePage: React.FC = () => {
       case 2:
         return <SalaryDetails />;
       // Future: Add other step components here
-      default:
-        return <AddEmployeeForm />;
+      case 3:
+        return <AssetAllocationForm />;
+      case 4:
+        return <PaymentInformationForm />;
+        
+        default:
+        return null;
     }
   };
 
