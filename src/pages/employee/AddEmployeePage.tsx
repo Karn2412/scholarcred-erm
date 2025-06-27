@@ -54,7 +54,9 @@ const AddEmployeePage: React.FC = () => {
             currentStep={currentStep} />
 
             {/* Dynamic Step Form */}
-            {renderStep()}
+            <div className='bg-white p-5 rounded-2xl'>
+              {renderStep()}
+            </div>
 
             {/* Navigation Buttons
             <div className="flex justify-end mt-6 gap-4">

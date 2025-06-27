@@ -30,7 +30,7 @@ const PaymentInformationForm: React.FC = () => {
   ];
 
   return (
-    <div className="bg-gray-50 p-6 rounded-lg shadow-sm max-w-3xl mx-auto ms-4">
+    <div className=" p-6 rounded-lg shadow-sm max-w-3xl mx-auto ms-4 bg-indigo-50">
       <h2 className="text-lg font-semibold mb-2">Payment Method</h2>
       <p className="text-sm text-gray-600 mb-4">Choose which payment method is preferred:</p>
 

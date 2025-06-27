@@ -2,12 +2,12 @@ import React from 'react';
 
 const SalaryDetailsForm: React.FC = () => {
   return (
-    <div className="p-1 rounded-md shadow-sm bg-white">
+    <div className="w-full ">
       {/* Top Heading */}
       <h2 className="text-center text-gray-700 font-semibold mb-6">Particulars</h2>
 
       {/* Grid with 3 columns - Last column stays blank */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-5 rounded-4xl bg-indigo-50">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-5 rounded-4xl bg-indigo-50 ">
       
         {/* Left Column */}
         <div>

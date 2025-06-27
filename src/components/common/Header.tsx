@@ -15,10 +15,14 @@ const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
       {/* Title */}
       <h3 className="text-lg font-semibold capitalize">
         {location.pathname === '/employees/add'
-          ? 'Add Employee'
+          ? 'Employee'
           : location.pathname.includes('employees')
           ? 'Employees'
-          : 'Dashboard'}
+          : location.pathname ==="/attendance"
+          ? 'Employee Attendence'
+          :  location.pathname.includes('attendence')
+          ? 'Employee Attendence': 'dashboard'
+          }
       </h3>
 
       {/* Right Section */}
