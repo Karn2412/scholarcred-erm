@@ -1,19 +1,18 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   FaUsers,
   FaCalendarAlt,
   FaFileInvoiceDollar,
   FaRegFileAlt,
   FaCog,
-  
 } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 
 const menuItems = [
   { name: 'Dashboard', icon: <MdDashboard />, path: '/dashboard' },
   { name: 'Employees', icon: <FaUsers />, path: '/employees' },
-  { name: 'Attendance and Leave', icon: <FaCalendarAlt />, path: '/attendance' },
+  { name: 'Attendance and Leave', icon: <FaCalendarAlt />, path: '/attendance', match: '/attendance' },
   { name: 'Pay Runs', icon: <FaFileInvoiceDollar />, path: '/payruns' },
   { name: 'Reimbursements', icon: <FaRegFileAlt />, path: '/reimbursements' },
   { name: 'Templates', icon: <FaRegFileAlt />, path: '/templates' },
@@ -26,6 +25,8 @@ interface Props {
 }
 
 const Sidebar: React.FC<Props> = ({ isOpen, onClose }) => {
+  const location = useLocation();
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -40,23 +41,28 @@ const Sidebar: React.FC<Props> = ({ isOpen, onClose }) => {
       >
         <h1 className="text-xl font-bold text-blue-600 mb-6">ScholarCred</h1>
         <ul className="space-y-4">
-          {menuItems.map((item) => (
-            <li key={item.name}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center space-x-3 px-4 py-2 rounded-xl font-medium ${
+          {menuItems.map((item) => {
+            const isActive =
+              item.path === '/attendance'
+                ? location.pathname.startsWith('/attendance')
+                : location.pathname === item.path;
+
+            return (
+              <li key={item.name}>
+                <NavLink
+                  to={item.path}
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-xl font-medium ${
                     isActive
                       ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-400 shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`
-                }
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </NavLink>
-            </li>
-          ))}
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </>

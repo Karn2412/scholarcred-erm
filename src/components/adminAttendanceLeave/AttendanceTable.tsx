@@ -35,8 +35,8 @@ const getStatusColor = (status: string) => {
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ attendanceData }) => {
 
     const navigate = useNavigate();
-const handleViewClick = () => {
-  navigate('/employee-attendance-detail');
+const handleViewClick = (id:number) => {
+  navigate(`/attendance-detail/${id}`);
 };
   return (
     <div className="overflow-x-auto rounded border border-gray-200 shadow-sm">
@@ -87,7 +87,7 @@ const handleViewClick = () => {
 
               {/* View Button */}
               <td className="py-2 px-3">
-  <button onClick={handleViewClick} className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1">
+  <button onClick={() => handleViewClick(item.id)} className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1">
     View <FaEye />
   </button>
 </td>

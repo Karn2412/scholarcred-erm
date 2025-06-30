@@ -1,0 +1,15 @@
+/* src/pages/EmployeeAttendance/AttendancePage.css */
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5);
+  border-radius: 4px;
+}
+
+.hide-scrollbar {
+  scrollbar-gutter: stable; /* Important: Prevent width shift */
+  overflow-y: scroll;        /* Always show scrollbar space */
+}
