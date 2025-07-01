@@ -36,7 +36,7 @@ const EmployeeAttendanceHeader: React.FC<EmployeeAttendanceHeaderProps> = ({ vie
 
           {/* Legend */}
           <div className="flex items-center space-x-4 text-xs">
-            <div className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded-full mr-1"></span>Checked In</div>
+            <div className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded-full mr-1"></span ><p className=''>Checked In</p></div>
             <div className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded-full mr-1"></span>Absent</div>
             <div className="flex items-center"><span className="w-3 h-3 bg-orange-400 rounded-full mr-1"></span>Regularization</div>
             <div className="flex items-center"><span className="w-3 h-3 bg-blue-500 rounded-full mr-1"></span>Approved Off</div>

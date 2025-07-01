@@ -6,6 +6,9 @@ import EmployeesPage from './pages/employee/Employee';
 import AddEmployeePage from './pages/employee/AddEmployeePage';
 import AttendanceAndLeavePage from './pages/attendence/AttendanceAndLeavePage';
 import EmployeeAttendanceDetailPage from './components/adminAttendanceLeave/EmployeeAttendanceDetailPage';
+import PayRunsPage from './pages/payRuns/PayRunsPage';
+import ReimbursementsPage from './pages/reimbursements/ReimbursementsPage';
+import SubmissionDetailsPage from './pages/reimbursements/SubmissionDetailsPage';
 
 const App: React.FC = () => {
   return (
@@ -16,6 +19,9 @@ const App: React.FC = () => {
         <Route path="/employees/add" element={<AddEmployeePage />} />
         <Route path="/attendance" element={<AttendanceAndLeavePage />} />
         <Route path="/attendance-detail/:id" element={<EmployeeAttendanceDetailPage />} />
+        <Route path="/payruns" element={<PayRunsPage />} />
+        <Route path="/reimbursements" element={<ReimbursementsPage />} />
+        <Route path="/reimbursements/:employeeId" element={<SubmissionDetailsPage />} />
 
     </Routes>
   );

@@ -41,11 +41,12 @@ const Sidebar: React.FC<Props> = ({ isOpen, onClose }) => {
       >
         <h1 className="text-xl font-bold text-blue-600 mb-6">ScholarCred</h1>
         <ul className="space-y-4">
-          {menuItems.map((item) => {
+         {menuItems.map((item) => {
             const isActive =
-              item.path === '/attendance'
-                ? location.pathname.startsWith('/attendance')
-                : location.pathname === item.path;
+              (item.path === '/attendance' && location.pathname.startsWith('/attendance')) ||
+              (item.path === '/employees' && location.pathname.startsWith('/employees')) ||
+              (item.path === '/reimbursements' && location.pathname.startsWith('/reimbursements')) ||
+              location.pathname === item.path;
 
             return (
               <li key={item.name}>
