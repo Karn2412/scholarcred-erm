@@ -38,7 +38,7 @@ const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
           ? 'Settings'
           :  location.pathname.includes('settings')
           ?  'Settings'
-          : ' '
+          : 'Dashboard'
           }
       </h3>
 
