@@ -9,6 +9,8 @@ import EmployeeAttendanceDetailPage from './components/adminAttendanceLeave/Empl
 import PayRunsPage from './pages/payRuns/PayRunsPage';
 import ReimbursementsPage from './pages/reimbursements/ReimbursementsPage';
 import SubmissionDetailsPage from './pages/reimbursements/SubmissionDetailsPage';
+import TemplatesPage from './pages/templates/TemplatesPage';
+import SettingsDepartmentsPage from './pages/settings/SettingsDepartmentsPage';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +24,8 @@ const App: React.FC = () => {
         <Route path="/payruns" element={<PayRunsPage />} />
         <Route path="/reimbursements" element={<ReimbursementsPage />} />
         <Route path="/reimbursements/:employeeId" element={<SubmissionDetailsPage />} />
+        <Route path="/templates" element={<TemplatesPage />} />
+        <Route path="/settings" element={<SettingsDepartmentsPage/>} />
 
     </Routes>
   );
