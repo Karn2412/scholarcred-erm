@@ -11,6 +11,8 @@ import ReimbursementsPage from './pages/reimbursements/ReimbursementsPage';
 import SubmissionDetailsPage from './pages/reimbursements/SubmissionDetailsPage';
 import TemplatesPage from './pages/templates/TemplatesPage';
 import SettingsDepartmentsPage from './pages/settings/SettingsDepartmentsPage';
+import StaffDashboard from './staff-module/pages/dashboard/StaffDashboard';
+import PersonalDetailsPage from './staff-module/pages/PersonalDetails/PersonalDetails';
 
 const App: React.FC = () => {
   return (
@@ -25,7 +27,10 @@ const App: React.FC = () => {
         <Route path="/reimbursements" element={<ReimbursementsPage />} />
         <Route path="/reimbursements/:employeeId" element={<SubmissionDetailsPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/settings" element={<SettingsDepartmentsPage/>} />
+        <Route path="/settings" element={<SettingsDepartmentsPage />} />
+        <Route path="/staff/dashboard" element={<StaffDashboard />} />
+        <Route path="/staff/personal-details" element={<PersonalDetailsPage/>} />
+
 
     </Routes>
   );
