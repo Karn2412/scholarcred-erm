@@ -6,6 +6,8 @@ import StaffSidebar from '../../components/common/StaffSidebar';
 import BasicDetailsForm from '../../components/personaldetails/BasicDetailsForm';
 import SectionStepper from '../../components/personaldetails/SectionTabs';
 import Header from '../../../components/common/Header';
+import BankingDetailsForm from '../../components/personaldetails/BankingDetailForm';
+import DocumentUploadForm from '../../components/personaldetails/DocumentUploadForm';
 
 
 const PersonalDetailsPage: React.FC = () => {
@@ -19,16 +21,18 @@ const PersonalDetailsPage: React.FC = () => {
       <div className="flex flex-col w-full">
         <Header />
 
-        <main className="p-6">
-          <SectionStepper
+        <main className="p-6 bg-blue-50" >
+          <div className='bg-white p-4'>
+            <SectionStepper
             currentSection={currentSection}
             onSectionChange={setCurrentSection}
           />
 
           <div className="bg-white p-6 rounded-2xl shadow-lg">
             {currentSection === 1 && <BasicDetailsForm />}
-            {/* {currentSection === 2 && < />}
-            {currentSection === 3 && < />} */}
+            {currentSection === 2 && <BankingDetailsForm />}
+            {currentSection === 3 && <DocumentUploadForm />}
+          </div>
           </div>
         </main>
       </div>

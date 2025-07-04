@@ -64,7 +64,7 @@ const SectionStepper: React.FC<Props> = ({
     idx < currentSection - 1 ? 'bg-green-500' : 'bg-gray-200';
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md mb-8">
+    <div className="bg-white p-6 rounded-2xl  mb-5">
       {/* Header */}
       <h2 className="text-xl font-semibold text-gray-900 mb-2">Personal Details</h2>
       <p className="text-sm text-gray-600 mb-6">
@@ -82,7 +82,7 @@ const SectionStepper: React.FC<Props> = ({
                 onClick={() => onSectionChange(step.number)}
               >
                 <div
-                  className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-medium ${circleClasses(
+                  className={`w-10 h-10 rounded-full border-2 flex  items-center justify-center font-medium ${circleClasses(
                     step.status
                   )}`}
                 >
@@ -90,7 +90,7 @@ const SectionStepper: React.FC<Props> = ({
                 </div>
                 <span className="text-sm mt-2 text-gray-700">{step.label}</span>
                 <span
-                  className={`text-xs ${
+                  className={`text-xs  ${
                     step.status === 'Completed'
                       ? 'text-green-600'
                       : step.status === 'In Progress'
@@ -104,7 +104,7 @@ const SectionStepper: React.FC<Props> = ({
 
               {!isLast && (
                 <div
-                  className={`flex-1 h-0.5 self-center -ml-1 ${lineClasses(idx)}`}
+                  className={`flex-1 h-0.5 mb-10  self-center -ml-1 ${lineClasses(idx)}`}
                 />
               )}
             </div>

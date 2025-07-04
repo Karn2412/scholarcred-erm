@@ -14,6 +14,8 @@ import SettingsDepartmentsPage from './pages/settings/SettingsDepartmentsPage';
 import StaffDashboard from './staff-module/pages/dashboard/StaffDashboard';
 import PersonalDetailsPage from './staff-module/pages/PersonalDetails/PersonalDetails';
 
+import EmployeeAttendancePage from './staff-module/pages/Attendance and leave page/Employeeattendence';
+
 const App: React.FC = () => {
   return (
     <Routes>
@@ -30,6 +32,7 @@ const App: React.FC = () => {
         <Route path="/settings" element={<SettingsDepartmentsPage />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/staff/personal-details" element={<PersonalDetailsPage/>} />
+        <Route path="/staff/attendance" element={<EmployeeAttendancePage/>} />
 
 
     </Routes>

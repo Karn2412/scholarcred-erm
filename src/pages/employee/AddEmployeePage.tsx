@@ -58,25 +58,7 @@ const AddEmployeePage: React.FC = () => {
               {renderStep()}
             </div>
 
-            {/* Navigation Buttons
-            <div className="flex justify-end mt-6 gap-4">
-              {currentStep > 1 && (
-                <button
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300"
-                >
-                  Back
-                </button>
-              )}
-              {currentStep < 4 && (
-                <button
-                  onClick={() => setCurrentStep(currentStep + 1)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-                >
-                  Next
-                </button>
-              )}
-            </div> */}
+            
           </div>
         </main>
       </div>

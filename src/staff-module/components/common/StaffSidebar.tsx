@@ -28,7 +28,7 @@ const StaffSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
 
       {/* Sidebar container */}
       <div
-        className={`fixed z-40 top-0 left-0 h-full w-80 bg-white p-4 border-r-gray-200 transform transition-transform duration-300 ease-in-out
+        className={` w-80 fixed z-40 top-0 left-0 h-full w-100 bg-white p-4 border-r-gray-200 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:block`}
       >
         <h1 className="text-xl font-bold text-blue-600 mb-6">ScholarCred</h1>
@@ -40,7 +40,7 @@ const StaffSidebar: React.FC<Props> = ({ isOpen, onClose }) => {
               <li key={item.name}>
                 <NavLink
                   to={item.path}
-                  className={`flex items-center space-x-3 px-4 py-2 rounded-xl font-medium ${
+                  className={`flex items-center space-x-1 px-2 py-2 w-80 rounded-xl font-medium ${
                     isActive
                       ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-400 shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
