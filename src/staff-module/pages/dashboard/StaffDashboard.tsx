@@ -17,7 +17,7 @@ const StaffDashboard = () => {
       <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col w-full">
         <Header />
-        <div className="p-6">
+        <div className="p-6  bg-blue-50">
           
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

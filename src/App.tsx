@@ -6,7 +6,7 @@ import EmployeesPage from './pages/employee/Employee';
 import AddEmployeePage from './pages/employee/AddEmployeePage';
 import AttendanceAndLeavePage from './pages/attendence/AttendanceAndLeavePage';
 import EmployeeAttendanceDetailPage from './components/adminAttendanceLeave/EmployeeAttendanceDetailPage';
-import PayRunsPage from './pages/payRuns/PayRunsPage';
+
 import ReimbursementsPage from './pages/reimbursements/ReimbursementsPage';
 import SubmissionDetailsPage from './pages/reimbursements/SubmissionDetailsPage';
 import TemplatesPage from './pages/templates/TemplatesPage';
@@ -15,6 +15,8 @@ import StaffDashboard from './staff-module/pages/dashboard/StaffDashboard';
 import PersonalDetailsPage from './staff-module/pages/PersonalDetails/PersonalDetails';
 
 import EmployeeAttendancePage from './staff-module/pages/Attendance and leave page/Employeeattendence';
+import PayRunsPage from './staff-module/pages/payslip/PayRunsPage';
+import ReimbursementPage from './staff-module/pages/reimbursments/StaffReimbursementPage';
 
 const App: React.FC = () => {
   return (
@@ -33,7 +35,8 @@ const App: React.FC = () => {
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/staff/personal-details" element={<PersonalDetailsPage/>} />
         <Route path="/staff/attendance" element={<EmployeeAttendancePage/>} />
-
+        <Route path="/staff/pay-slips" element={<PayRunsPage/>} />
+        <Route path="/staff/reimbursements" element={<ReimbursementPage />} />
 
     </Routes>
   );

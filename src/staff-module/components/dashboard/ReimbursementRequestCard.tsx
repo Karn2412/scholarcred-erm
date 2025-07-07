@@ -1,6 +1,8 @@
 import React from 'react';
 
+
 const ReimbursementRequestCard: React.FC = () => {
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">
@@ -27,6 +29,8 @@ const ReimbursementRequestCard: React.FC = () => {
         </div>
       </div>
      </div>
+    
+
     </div>
   );
 };
