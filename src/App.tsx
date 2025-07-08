@@ -15,8 +15,10 @@ import StaffDashboard from './staff-module/pages/dashboard/StaffDashboard';
 import PersonalDetailsPage from './staff-module/pages/PersonalDetails/PersonalDetails';
 
 import EmployeeAttendancePage from './staff-module/pages/Attendance and leave page/Employeeattendence';
-import PayRunsPage from './staff-module/pages/payslip/PayRunsPage';
+import PayRunsPage from './staff-module/pages/payslip/PayRunsPageStaff';
 import ReimbursementPage from './staff-module/pages/reimbursments/StaffReimbursementPage';
+import PayRunsPageAdmin from './pages/payRuns/PayRunsPageAdmin';
+
 
 const App: React.FC = () => {
   return (
@@ -27,7 +29,7 @@ const App: React.FC = () => {
         <Route path="/employees/add" element={<AddEmployeePage />} />
         <Route path="/attendance" element={<AttendanceAndLeavePage />} />
         <Route path="/attendance-detail/:id" element={<EmployeeAttendanceDetailPage />} />
-        <Route path="/payruns" element={<PayRunsPage />} />
+        <Route path="/payruns" element={<PayRunsPageAdmin />} />
         <Route path="/reimbursements" element={<ReimbursementsPage />} />
         <Route path="/reimbursements/:employeeId" element={<SubmissionDetailsPage />} />
         <Route path="/templates" element={<TemplatesPage />} />

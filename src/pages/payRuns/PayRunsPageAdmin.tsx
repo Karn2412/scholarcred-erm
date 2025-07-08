@@ -5,7 +5,7 @@ import PayRunsFilters from '../../components/payruns/PayRunsFilters';
 import PayRunsTable from '../../components/payruns/PayRunsTable';
 
 
-const PayRunsPage: React.FC = () => {
+const PayRunsPageAdmin: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -27,4 +27,4 @@ const PayRunsPage: React.FC = () => {
   );
 };
 
-export default PayRunsPage;
+export default PayRunsPageAdmin;
