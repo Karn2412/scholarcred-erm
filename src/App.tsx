@@ -18,11 +18,13 @@ import EmployeeAttendancePage from './staff-module/pages/Attendance and leave pa
 import PayRunsPage from './staff-module/pages/payslip/PayRunsPageStaff';
 import ReimbursementPage from './staff-module/pages/reimbursments/StaffReimbursementPage';
 import PayRunsPageAdmin from './pages/payRuns/PayRunsPageAdmin';
+import LoginPage from './pages/login/Login';
 
 
 const App: React.FC = () => {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/employees" element={<EmployeesPage />} />

@@ -55,9 +55,13 @@ const EmployeeAttendancePage: React.FC = () => {
 
         <div className="p-6 space-y-6">
           {/* Top Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TimeTrackerCard />
-            <WorkRequestCard />
+          <div className="flex gap-4 ">
+         <div className="w-1/2">
+    <TimeTrackerCard />
+  </div>
+  <div className="w-1/2">
+    <WorkRequestCard />
+  </div>
           </div>
 
           {/* Attendance Panel */}
