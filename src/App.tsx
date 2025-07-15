@@ -19,6 +19,7 @@ import PayRunsPage from './staff-module/pages/payslip/PayRunsPageStaff';
 import ReimbursementPage from './staff-module/pages/reimbursments/StaffReimbursementPage';
 import PayRunsPageAdmin from './pages/payRuns/PayRunsPageAdmin';
 import LoginPage from './pages/login/Login';
+import ProtectedRoute from './ProtectedRoute';
 
 
 const App: React.FC = () => {
@@ -26,16 +27,36 @@ const App: React.FC = () => {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/employees" element={<EmployeesPage />} />
-        <Route path="/employees/add" element={<AddEmployeePage />} />
-        <Route path="/attendance" element={<AttendanceAndLeavePage />} />
-        <Route path="/attendance-detail/:id" element={<EmployeeAttendanceDetailPage />} />
-        <Route path="/payruns" element={<PayRunsPageAdmin />} />
-        <Route path="/reimbursements" element={<ReimbursementsPage />} />
-        <Route path="/reimbursements/:employeeId" element={<SubmissionDetailsPage />} />
-        <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/settings" element={<SettingsDepartmentsPage />} />
+        <Route path="/dashboard" element={
+  <ProtectedRoute><Dashboard /></ProtectedRoute>
+} />
+        <Route path="/employees" element={
+  <ProtectedRoute><EmployeesPage /></ProtectedRoute>
+} />
+        <Route path="/employees/add" element={
+  <ProtectedRoute><AddEmployeePage /></ProtectedRoute>
+} />
+        <Route path="/attendance" element={
+  <ProtectedRoute><AttendanceAndLeavePage /></ProtectedRoute>
+} />
+        <Route path="/attendance-detail/:id" element={
+  <ProtectedRoute><EmployeeAttendanceDetailPage /></ProtectedRoute>
+} />
+        <Route path="/payruns" element={
+  <ProtectedRoute><PayRunsPageAdmin /></ProtectedRoute>
+} />
+        <Route path="/reimbursements" element={
+  <ProtectedRoute><ReimbursementsPage /></ProtectedRoute>
+} />
+        <Route path="/reimbursements/:employeeId" element={
+  <ProtectedRoute><SubmissionDetailsPage /></ProtectedRoute>
+} />
+        <Route path="/templates" element={
+  <ProtectedRoute><TemplatesPage /></ProtectedRoute>
+} />
+        <Route path="/settings" element={
+  <ProtectedRoute><SettingsDepartmentsPage /></ProtectedRoute>
+} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/staff/personal-details" element={<PersonalDetailsPage/>} />
         <Route path="/staff/attendance" element={<EmployeeAttendancePage/>} />

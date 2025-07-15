@@ -1,7 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+import { supabase } from '../../supabaseClient'
+import { useNavigate } from 'react-router-dom'
 
 const LoginPage: React.FC = () => {
-  const [role, setRole] = useState('Admin');
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('Admin')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    if (error) {
+      setError(error.message)
+      console.log('Login error:', error);
+      
+      return
+    }
+
+    const userId = data.user.id
+ console.log(data);
+  
+    if (data) {
+    
+      
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      
+
+      if (adminError || !adminData) {
+        setError('You are not registered as Admin')
+        return
+      }
+
+      navigate('/dashboard')
+    } else if (data) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (userError || !userData) {
+        setError('You are not registered as Staff')
+        return
+      }
+
+      navigate('/staff/dashboard')
+    }
+  }
+
+ 
 
   const handleRoleSelect = (selectedRole: string) => {
     setRole(selectedRole);
@@ -23,20 +80,24 @@ const LoginPage: React.FC = () => {
         <div className="mb-4 text-left">
           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input
-            type="email"
-            placeholder="Enter your Email here"
-            className="w-full px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
-          />
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="Enter your Email here"
+  className="w-full px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
+/>
         </div>
 
         {/* Password Input */}
         <div className="mb-4 text-left">
           <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <input
-            type="password"
-            placeholder="Enter your Password"
-            className="w-full px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
-          />
+  type="password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  placeholder="Enter your Password"
+  className="w-full px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
+/>
         </div>
 
         {/* Role Toggle (Admin & Staff only) */}
@@ -62,9 +123,12 @@ const LoginPage: React.FC = () => {
 
 
         {/* Login Button */}
-        <button className="w-full bg-[#002B5B] text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-900 transition">
-          Login
-        </button>
+        <button
+  onClick={handleLogin}
+  className="w-full bg-[#002B5B] text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-900 transition"
+>
+  Login
+</button>
 
         {/* Footer */}
         <p className="text-xs text-gray-600 mt-4">
