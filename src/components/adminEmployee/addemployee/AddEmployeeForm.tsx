@@ -1,10 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../../../supabaseClient';
 
 const AddEmployeeForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    number: '',
+    gender: 'Male',
+    dateOfJoining: '',
+    designation: '',
+    department: 'HR',
+    levels: 0,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.access_token) {
+      console.error('Session error or missing token:', sessionError?.message);
+      return;
+    }
+
+    const accessToken = session.access_token;
+
+    const fullName = `${formData.firstName} ${formData.middleName} ${formData.lastName}`.trim();
+    const formattedDate = new Date(formData.dateOfJoining).toISOString().split('T')[0];
+
+    const requestBody = {
+      email: formData.email,
+      password: formData.password,
+      name: fullName,
+      number: formData.number,
+      levels: Number(formData.levels),
+      gender: formData.gender,
+      date_of_joining: formattedDate,
+      designation: formData.designation,
+      department: formData.department,
+      company_id: "abf5c8bd-d12f-45c3-b148-b45f79c8e382", // Replace with actual admin company_id dynamically if needed
+    };
+
+    const response = await fetch('https://weomenwupoiizjjmrvjw.supabase.co/functions/v1/add-employee', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error('Edge Function Error:', result.error);
+    } else {
+      alert('Employee added successfully!');
+      console.log(result);
+    }
+  };
+
   return (
-    <div className="bg-white p-6 rounded-md shadow-sm">
-<div className="flex flex-col h-[calc(100vh-200px)] overflow-hidden px-4 pr-6">
- {/* Form */}
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow-sm">
       <div className="space-y-6 pr-6">
         {/* Employee Name */}
         <div>
@@ -12,207 +78,98 @@ const AddEmployeeForm: React.FC = () => {
             Employee Name <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input 
-              type="text" 
-              placeholder="First Name" 
-              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input 
-              type="text" 
-              placeholder="Middle Name" 
-              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input 
-              type="text" 
-              placeholder="Last Name" 
-              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <input type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
+            <input type="text" name="middleName" placeholder="Middle Name" value={formData.middleName} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
+            <input type="text" name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
           </div>
         </div>
 
-        {/* Employee ID and Date of Joining */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Employee ID <span className="text-red-500">*</span>
-    </label>
-    <input 
-      type="text" 
-      placeholder="50000000" 
-      className="w-3/4 px-3 rounded-full py-2 border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    />
-  </div>
+        {/* Employee ID (optional) and Date of Joining */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date of Joining <span className="text-red-500">*</span>
+            </label>
+            <input type="date" name="dateOfJoining" value={formData.dateOfJoining} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
+          </div>
+        </div>
 
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date of Joining <span className="text-red-500">*</span>
-    </label>
-    <div className="relative w-3/4">
-      <input 
-        type="text" 
-        placeholder="dd--mm--yyyy" 
-        className="block w-full px-3 py-2 pr-10 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      />
-      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg
-          className="h-5 w-5 text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-        {/* Work Email and Mobile Number */}
+        {/* Work Email and Password */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Work Email <span className="text-red-500">*</span>
             </label>
-            <input 
-              type="email" 
-              placeholder="abcde@scholarcred.com" 
-              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <input type="email" name="email" placeholder="abc@company.com" value={formData.email} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mobile Number
+              Password <span className="text-red-500">*</span>
             </label>
-            <input 
-              type="text" 
-              placeholder="+91 9898989898" 
-              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <input type="password" name="password" placeholder="Enter password" value={formData.password} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
           </div>
         </div>
 
-        {/* Director checkbox */}
-        <div className="flex items-start space-x-3">
-          <input 
-            type="checkbox" 
-            className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-400 rounded-full"
-          />
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">
-              Employee is a director/person with substantial interest in the company.
-            </span>
-            <div className="flex items-center justify-center w-5 h-5 bg-yellow-100 rounded-full">
-              <span className="text-yellow-600 text-xs">⚠</span>
-            </div>
+        {/* Gender and Mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <select name="gender" value={formData.gender} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full bg-white">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
-        </div>
-
-        {/* Gender and Work Location */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Gender <span className="text-red-500">*</span>
-  </label>
-  <div className="relative w-3/4">
-    <select className="block w-full px-3 py-2 border border-blue-400 rounded-full appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Other">Other</option>
-    </select>
-  
-    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
-  </div>
-</div>
-
-          <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Work Location <span className="text-red-500">*</span>
-  </label>
-  <div className="relative w-3/4">
-    <select className="block w-full px-3 py-2 border border-blue-400 rounded-full appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-      <option value="Head Office (SDC 4 Tower A)">Head Office (SDC 4 Tower A)</option>
-      <option value="Branch Office">Branch Office</option>
-      <option value="Remote">Remote</option>
-    </select>
-    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
-  </div>
-</div>
-
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mobile Number <span className="text-red-500">*</span>
+            </label>
+            <input type="text" name="number" placeholder="+91 9876543210" value={formData.number} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
+          </div>
         </div>
 
         {/* Designation and Department */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Designation <span className="text-red-500">*</span>
-  </label>
-  <div className="relative w-3/4">
-    <input    
-      type="text" 
-      placeholder="Enter Designation" 
-      className="block w-full px-3 py-2 pr-10 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    />
-    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
-  </div>
-  </div>
-
-         <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Department <span className="text-red-500">*</span>
-  </label>
-  <div className="relative w-3/4">
-    <select className="block w-full px-3 py-2 pr-10 border border-blue-400 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white">
-      <option value="Education Loan Customer Support">Education Loan Customer Support</option>
-      <option value="HR">HR</option>
-      <option value="Finance">Finance</option>
-      <option value="IT">IT</option>
-    </select>
-    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
-  </div>
-</div>
-
-        </div>
-
-        {/* Enable Portal Access */}
-        <div className="flex items-start space-x-3">
-          <input 
-            type="checkbox" 
-            className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-400 rounded"
-          />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Designation
+            </label>
+            <input type="text" name="designation" placeholder="e.g. Software Engineer" value={formData.designation} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full" />
+          </div>
           <div>
-            <div className="text-sm font-medium text-gray-900">Enable Portal Access</div>
-            <div className="text-xs text-gray-500 mt-1">
-              The employee will be able to view payslips, submit their IT declaration, create reimbursement claims and so on.
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Department <span className="text-red-500">*</span>
+            </label>
+            <select name="department" value={formData.department} onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full bg-white">
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="IT">IT</option>
+              <option value="Customer Support">Customer Support</option>
+            </select>
           </div>
         </div>
-        </div>
-</div>
 
-      
-    </div>
+        {/* Submit Button */}
+        <div className="pt-4">
+          <button type="submit"
+            className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
+            Add Employee
+          </button>
+        </div>
+      </div>
+    </form>
   );
 };
 
