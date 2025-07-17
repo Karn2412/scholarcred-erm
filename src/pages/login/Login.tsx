@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../../context/UserContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ const LoginPage: React.FC = () => {
   const [role, setRole] = useState('Admin')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { setUserData } = useUser();
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -38,23 +40,34 @@ const LoginPage: React.FC = () => {
 
       if (adminError || !adminData) {
         setError('You are not registered as Admin')
-        return
+        
+      } else {
+        navigate('/dashboard')
       }
+    } 
+    
+    if (data) {
 
-      navigate('/dashboard')
-    } else if (data) {
+      // Check if the user is a staff member
+      console.log('User ID:', userId);
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
 
+        console.log('userData:', userData);
+        
+
       if (userError || !userData) {
         setError('You are not registered as Staff')
         return
       }
-
-      navigate('/staff/dashboard')
+        
+      if (userData) {
+        setUserData(userData); // Set user data in context
+        navigate('/staff/dashboard')
+      }
     }
   }
 

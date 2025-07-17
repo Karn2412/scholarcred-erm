@@ -25,8 +25,9 @@ const AddEmployeeForm: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
+  try {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !session?.access_token) {
       console.error('Session error or missing token:', sessionError?.message);
@@ -34,6 +35,25 @@ const AddEmployeeForm: React.FC = () => {
     }
 
     const accessToken = session.access_token;
+
+    // Step 1: Get current user ID
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Failed to get current user:', userError?.message);
+      return;
+    }
+
+    // Step 2: Get company_id from admins table
+    const { data: adminRecord, error: adminError } = await supabase
+      .from('admins')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (adminError || !adminRecord?.company_id) {
+      console.error('Admin not found or no company_id:', adminError?.message);
+      return;
+    }
 
     const fullName = `${formData.firstName} ${formData.middleName} ${formData.lastName}`.trim();
     const formattedDate = new Date(formData.dateOfJoining).toISOString().split('T')[0];
@@ -48,26 +68,33 @@ const AddEmployeeForm: React.FC = () => {
       date_of_joining: formattedDate,
       designation: formData.designation,
       department: formData.department,
-      company_id: "abf5c8bd-d12f-45c3-b148-b45f79c8e382", // Replace with actual admin company_id dynamically if needed
+      company_id: adminRecord.company_id,
     };
 
     const response = await fetch('https://weomenwupoiizjjmrvjw.supabase.co/functions/v1/add-employee', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
     const result = await response.json();
+
     if (!response.ok) {
       console.error('Edge Function Error:', result.error);
+      alert(`Failed to add employee: ${result.error}`);
     } else {
       alert('Employee added successfully!');
       console.log(result);
     }
-  };
+  } catch (err: any) {
+    console.error('Unexpected error:', err.message);
+    alert('An unexpected error occurred. Please try again.');
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow-sm">
