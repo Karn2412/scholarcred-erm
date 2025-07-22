@@ -11,65 +11,56 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate()
   const { setUserData } = useUser();
 
-  const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
+const handleLogin = async () => {
+  setError('');
 
-    if (error) {
-      setError(error.message)
-      console.log('Login error:', error);
-      
-      return
-    }
+  const { data, error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-    const userId = data.user.id
- console.log(data);
-  
-    if (data) {
-    
-      
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      
-
-      if (adminError || !adminData) {
-        setError('You are not registered as Admin')
-        
-      } else {
-        navigate('/dashboard')
-      }
-    } 
-    
-    if (data) {
-
-      // Check if the user is a staff member
-      console.log('User ID:', userId);
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-        console.log('userData:', userData);
-        
-
-      if (userError || !userData) {
-        setError('You are not registered as Staff')
-        return
-      }
-        
-      if (userData) {
-        setUserData(userData); // Set user data in context
-        navigate('/staff/dashboard')
-      }
-    }
+  if (authError) {
+    setError(authError.message);
+    console.log('Login error:', authError);
+    return;
   }
+
+  const userId = data.user.id;
+  console.log('Signed in user:', data.user);
+
+  if (role === 'Admin') {
+    const { data: adminData, error: adminError } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (adminError || !adminData) {
+      setError('You are not registered as Admin');
+      return;
+    }
+
+    setUserData(adminData); // Save admin data to context
+    navigate('/dashboard');
+  }
+
+  if (role === 'Staff') {
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      setError('You are not registered as Staff');
+      return;
+    }
+
+    setUserData(userData); // Save staff data to context
+    navigate('/staff/dashboard');
+  }
+};
+
 
  
 

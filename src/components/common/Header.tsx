@@ -1,14 +1,38 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaSearch, FaBell } from 'react-icons/fa';
-import { useLocation } from 'react-router-dom';
-  
+import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
+
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Define pages where search bar should be hidden
- const hideSearchBarRoutes = ['/employees'];
-const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
+  const hideSearchBarRoutes = ['/employees'];
+  const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
 
+  // Logout function
+  const handleLogout = async () => {
+     const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Logout error:', error.message);
+  } else {
+    console.log('User logged out');
+    navigate('/login'); // or wherever your login page is
+  }
+  };
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 border-b border-gray-200 space-y-4 sm:space-y-0">
@@ -18,40 +42,21 @@ const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
           ? 'Employee'
           : location.pathname.includes('employees')
           ? 'Employees'
-          : location.pathname ==="/attendance"
+          : location.pathname.includes('attendance')
           ? 'Attendance And Leave'
-          :  location.pathname.includes('attendance')
-          ? 'Attendance And Leave'
-          : location.pathname ==="/payruns"
+          : location.pathname.includes('pay')
           ? 'Pay Runs'
-          :  location.pathname.includes('pay')
-          ? 'Pay Runs'
-          : location.pathname ==="/reimbursements"
+          : location.pathname.includes('reimbursements')
           ? 'Reimbursements'
-          :  location.pathname.includes('reimbursements')
-          ?  'Reimbursements'
-          : location.pathname ==="/templates"
+          : location.pathname.includes('templates')
           ? 'Templates'
-          :  location.pathname.includes('templates')
-          ?  'Templates'
-          : location.pathname ==="/settings"
+          : location.pathname.includes('settings')
           ? 'Settings'
-          :  location.pathname.includes('settings')
-          ?  'Settings'
-          : location.pathname ==="/staff/personal-details"
+          : location.pathname.includes('personal-details')
           ? 'Personal Details'
-          :  location.pathname.includes('personal-details')
-          ?  'Personal Details'
-          : location.pathname ==="/staff/attendance"
-          ? 'Attendance'
-          :  location.pathname.includes('attendance')
-          ?  'Attendance'
-          : location.pathname ==="/staff/pay-slips"
-          ? 'Pay Slips' 
-          :  location.pathname.includes('pay-slips')
-          ?  'Pay Slips'
-          :"Dashboard"
-          }
+          : location.pathname.includes('pay-slips')
+          ? 'Pay Slips'
+          : 'Dashboard'}
       </h3>
 
       {/* Right Section */}
@@ -71,17 +76,34 @@ const shouldHideSearchBar = hideSearchBarRoutes.includes(location.pathname);
         {/* Notification Icon */}
         <FaBell className="text-gray-600" />
 
-        {/* Profile Info */}
-        <div className="flex items-center space-x-2">
-          <img
-            src="https://www.profilebakery.com/wp-content/uploads/2023/04/LINKEDIN-Profile-Picture-AI-400x400.jpg"
-            alt="Profile"
-            className="rounded-full w-[30px] h-[30px]"
-          />
-          <div>
-            <p className="text-sm font-medium">Robert Shah</p>
-            <p className="text-xs text-gray-500">HR Admin</p>
+        {/* Profile Info with Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <div
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => setDropdownOpen((prev) => !prev)}
+          >
+            <img
+              src="https://www.profilebakery.com/wp-content/uploads/2023/04/LINKEDIN-Profile-Picture-AI-400x400.jpg"
+              alt="Profile"
+              className="rounded-full w-[30px] h-[30px]"
+            />
+            <div>
+              <p className="text-sm font-medium">Robert Shah</p>
+              <p className="text-xs text-gray-500">HR Admin</p>
+            </div>
           </div>
+
+          {/* Dropdown */}
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10">
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

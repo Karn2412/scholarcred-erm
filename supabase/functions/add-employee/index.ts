@@ -80,7 +80,7 @@ serve(async (req) => {
       name,
       company_id,
       number,
-      levels,
+     
       gender,
       date_of_joining,
       designation,
@@ -89,7 +89,8 @@ serve(async (req) => {
 
     if (
       !email || !password || !name || !company_id || !number ||
-      levels === undefined || !gender || !date_of_joining || !department
+      
+      !gender || !date_of_joining || !department
     ) {
       return withCors(new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
@@ -126,10 +127,10 @@ serve(async (req) => {
       name,
       company_id,
       number,
-      levels,
+     
       gender,
       date_of_joining,
-      password,
+      
       designation: designation || null,
       department,
     }]);

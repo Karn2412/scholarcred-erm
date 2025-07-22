@@ -13,7 +13,7 @@ const AddEmployeeForm: React.FC = () => {
     dateOfJoining: '',
     designation: '',
     department: 'HR',
-    levels: 0,
+    // levels: 0,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -63,7 +63,7 @@ const AddEmployeeForm: React.FC = () => {
       password: formData.password,
       name: fullName,
       number: formData.number,
-      levels: Number(formData.levels),
+      // levels: Number(formData.levels),
       gender: formData.gender,
       date_of_joining: formattedDate,
       designation: formData.designation,

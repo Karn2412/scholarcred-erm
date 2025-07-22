@@ -1,190 +1,187 @@
 import React from 'react';
 
-const BasicDetailsForm: React.FC = () => {
+interface BasicDetailsFormProps {
+  formData: any;
+  setFormData: (data: any) => void;
+}
+
+const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ formData, setFormData }) => {
   const pillInput =
     'w-full px-4 py-2 border-2 border-blue-400 rounded-full focus:outline-none focus:border-blue-500';
 
   const pillSelect =
     'w-full px-4 py-2 border-2 border-blue-400 rounded-full bg-white focus:outline-none focus:border-blue-500 appearance-none';
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg max-h-screen overflow-y-auto">
-      {/* Section Title */}
-      
-
       <form className="space-y-6">
-
-        {/* Row 1: Date of Birth, Age, PAN */}
+        {/* Row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Date of Birth */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date of Birth <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="dd--mm--yyyy"
-                className={`${pillInput} pr-10`}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-            </div>
+            <input
+              type="text"
+              name="date_of_birth"
+              placeholder="dd-mm-yyyy"
+              className={pillInput}
+              value={formData.date_of_birth || ''}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Age */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Age <span className="text-red-500">*</span>
             </label>
-            <input type="text" placeholder="00" className={pillInput} />
+            <input
+              type="text"
+              name="age"
+              placeholder="00"
+              className={pillInput}
+              value={formData.age || ''}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* PAN */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               PAN <span className="text-red-500">*</span>
             </label>
-            <input type="text" placeholder="XXXXXXXXXX" className={pillInput} />
+            <input
+              type="text"
+              name="pan_no"
+              placeholder="XXXXXXXXXX"
+              className={pillInput}
+              value={formData.pan_no || ''}
+              onChange={handleChange}
+            />
           </div>
         </div>
 
-        {/* Row 2: Father's Name, Differently Abled Type, Personal Email */}
+        {/* Row 2 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Father's Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Father's Name <span className="text-red-500">*</span>
             </label>
-            <input type="text" placeholder="XXXXXXXXXX" className={pillInput} />
+            <input
+              type="text"
+              name="father_name"
+              placeholder="Father's Name"
+              className={pillInput}
+              value={formData.father_name || ''}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Differently Abled Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Differently Abled Type
             </label>
-            <div className="relative">
-              <select className={pillSelect}>
-                <option>Not</option>
-                <option>Visually Impaired</option>
-                <option>Hearing Impaired</option>
-                <option>Physically Handicapped</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+            <select
+              name="differently_abled_type"
+              className={pillSelect}
+              value={formData.differently_abled_type || 'Not'}
+              onChange={handleChange}
+            >
+              <option>Not</option>
+              <option>Visually Impaired</option>
+              <option>Hearing Impaired</option>
+              <option>Physically Handicapped</option>
+            </select>
           </div>
 
-          {/* Personal Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Personal Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
+              name="personal_email"
               placeholder="xxxx@gmail.com"
               className={pillInput}
+              value={formData.personal_email || ''}
+              onChange={handleChange}
             />
           </div>
         </div>
 
-        {/* Row 3: Address Line 1 */}
+        {/* Address Row 1 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Address Line 1
           </label>
           <input
             type="text"
+            name="address_line1"
             placeholder="Address line 1"
             className={pillInput}
+            value={formData.address_line1 || ''}
+            onChange={handleChange}
           />
         </div>
 
-        {/* Row 4: Address Line 2 */}
+        {/* Address Row 2 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Address Line 2
           </label>
           <input
             type="text"
+            name="address_line2"
             placeholder="Address line 2"
             className={pillInput}
+            value={formData.address_line2 || ''}
+            onChange={handleChange}
           />
         </div>
 
-        {/* Row 5: City, State, Pincode */}
+        {/* City, State, Pincode */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* City */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              City
-            </label>
-            <input type="text" placeholder="City" className={pillInput} />
+            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <input
+              type="text"
+              name="city"
+              placeholder="City"
+              className={pillInput}
+              value={formData.city || ''}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* State */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              State
-            </label>
-            <div className="relative">
-              <select className={pillSelect}>
-                <option>Select State</option>
-                <option>Kerala</option>
-                <option>Tamil Nadu</option>
-                <option>Karnataka</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+            <select
+              name="state"
+              className={pillSelect}
+              value={formData.state || ''}
+              onChange={handleChange}
+            >
+              <option value="">Select State</option>
+              <option>Kerala</option>
+              <option>Tamil Nadu</option>
+              <option>Karnataka</option>
+            </select>
           </div>
 
-          {/* Pincode */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pincode
-            </label>
-            <input type="text" placeholder="Pincode" className={pillInput} />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+            <input
+              type="text"
+              name="pincode"
+              placeholder="Pincode"
+              className={pillInput}
+              value={formData.pincode || ''}
+              onChange={handleChange}
+            />
           </div>
         </div>
       </form>
