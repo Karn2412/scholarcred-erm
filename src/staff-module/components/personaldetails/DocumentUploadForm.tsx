@@ -1,73 +1,101 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+interface Document {
+  name: string;
+  file?: File;
+  url?: string;
+}
 
 interface Props {
   formData: {
-    panCard: File | null;
-    aadhaarCard: File | null;
-    blankCheque: File | null;
+    documents: Document[];
+    panCardUrl?: string;
+    aadhaarCardUrl?: string;
+    blankChequeUrl?: string;
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
 }
 
 const DocumentUploadForm: React.FC<Props> = ({ formData, setFormData }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'panCard' | 'aadhaarCard' | 'blankCheque') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev: any) => ({
-        ...prev,
-        [type]: file
-      }));
-    }
+  const [newDocName, setNewDocName] = useState('');
+  const [newDocFile, setNewDocFile] = useState<File | null>(null);
+
+  const handleAddDocument = () => {
+    if (!newDocName || !newDocFile) return;
+    setFormData((prev: any) => ({
+      ...prev,
+      documents: [
+        ...(prev.documents || []),
+        { name: newDocName, file: newDocFile },
+      ],
+    }));
+    setNewDocName('');
+    setNewDocFile(null);
   };
 
   return (
     <div className="p-6 rounded-md shadow-sm bg-white">
-      <h2 className="text-lg font-bold mb-4">Document Upload</h2>
+      <h2 className="text-lg font-bold mb-4">Uploaded Documents</h2>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Upload PAN Card <span className="text-red-500">*</span>
-        </label>
+      {/* Only Display Existing PAN, Aadhaar & Cheque URLs */}
+      {formData.panCardUrl && (
+        <div className="mb-4">
+          <span className="font-medium">PAN Card:</span>{' '}
+          <a href={formData.panCardUrl} className="text-blue-600 underline" target="_blank" rel="noreferrer">View</a>
+        </div>
+      )}
+      {formData.aadhaarCardUrl && (
+        <div className="mb-4">
+          <span className="font-medium">Aadhaar Card:</span>{' '}
+          <a href={formData.aadhaarCardUrl} className="text-blue-600 underline" target="_blank" rel="noreferrer">View</a>
+        </div>
+      )}
+      {formData.blankChequeUrl && (
+        <div className="mb-4">
+          <span className="font-medium">Blank Cheque:</span>{' '}
+          <a href={formData.blankChequeUrl} className="text-blue-600 underline" target="_blank" rel="noreferrer">View</a>
+        </div>
+      )}
+
+      {/* Dynamic User-Uploaded Docs */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-md mb-2">Add New Document</h3>
+        <input
+          type="text"
+          value={newDocName}
+          onChange={(e) => setNewDocName(e.target.value)}
+          placeholder="Document Name"
+          className="border rounded p-2 w-full mb-2"
+        />
         <input
           type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => handleFileChange(e, 'panCard')}
-          className="w-full border border-gray-300 rounded px-3 py-2"
+          onChange={(e) => setNewDocFile(e.target.files?.[0] || null)}
+          className="border rounded p-2 w-full mb-2"
         />
-        {formData.panCard && (
-          <p className="text-sm text-gray-500 mt-1">Selected: {formData.panCard.name}</p>
-        )}
+        <button
+          type="button"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={handleAddDocument}
+        >
+          Add Document
+        </button>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Upload Aadhaar Card <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => handleFileChange(e, 'aadhaarCard')}
-          className="w-full border border-gray-300 rounded px-3 py-2"
-        />
-        {formData.aadhaarCard && (
-          <p className="text-sm text-gray-500 mt-1">Selected: {formData.aadhaarCard.name}</p>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Upload Blank Cheque <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => handleFileChange(e, 'blankCheque')}
-          className="w-full border border-gray-300 rounded px-3 py-2"
-        />
-        {formData.blankCheque && (
-          <p className="text-sm text-gray-500 mt-1">Selected: {formData.blankCheque.name}</p>
-        )}
-      </div>
+      {/* List of User-Added Files (Not Yet Uploaded) */}
+      {formData.documents?.length > 0 && (
+        <div className="mt-4">
+          <h4 className="font-medium mb-2">Documents to Upload:</h4>
+          <ul className="list-disc list-inside text-sm">
+            {formData.documents.map((doc, idx) => (
+              <li key={idx}>
+                {doc.name} {doc.file && ` - ${doc.file.name}`} {doc.url && (
+                  <a href={doc.url} target="_blank" rel="noreferrer" className="text-blue-600 ml-2">View</a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
