@@ -30,27 +30,30 @@ const PersonalDetailsPage: React.FC = () => {
         return;
       }
 
-      const uploadFile = async (file: File, path: string) => {
-        const { data, error } = await supabase.storage
-          .from("usersdocuments")
-          .upload(path, file, { cacheControl: "3600", upsert: true });
+      const uploadFile = async (file: File, folder: string) => {
+  const safeName = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`; // sanitize file name
+  const filePath = `${folder}/${safeName}`;
 
-        if (error) throw error;
+  const { data, error } = await supabase.storage
+    .from("usersdocuments") // ✅ only bucket name here
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
 
-        return data?.path
-          ? supabase.storage
-              .from("usersdocuments")
-              .getPublicUrl(data.path).data.publicUrl
-          : null;
-      };
+  if (error) throw error;
+
+  return supabase.storage
+    .from("usersdocuments")
+    .getPublicUrl(filePath).data.publicUrl;
+};
+;
 
       const panImagePath =
-        usersdocuments.panCard instanceof File
-          ? await uploadFile(
-              usersdocuments.panCard,
-              `pan/${Date.now()}_${usersdocuments.panCard.name}`
-            )
-          : usersdocuments.panCardUrl;
+  usersdocuments.panCard instanceof File
+    ? await uploadFile(usersdocuments.panCard, "pan")
+    : usersdocuments.panCardUrl;
+
 
       const aadhaarImagePath =
         usersdocuments.aadhaarCard instanceof File
@@ -88,7 +91,7 @@ const PersonalDetailsPage: React.FC = () => {
       const uploadedDocs = await Promise.all(documentList);
 
       // ✅ Use uploadedDocs instead of documentList
-      const { error } = await supabase.from("users_personal_details").upsert(
+      const { error } = await supabase.from("personal_details").upsert(
         {
           id: userId,
           date_of_birth: basicDetails.date_of_birth,
@@ -129,7 +132,7 @@ const PersonalDetailsPage: React.FC = () => {
       if (!userId) return;
 
       const { data, error } = await supabase
-        .from("users_personal_details")
+        .from("personal_details")
         .select("*")
         .eq("id", userId)
         .maybeSingle(); // ✅ FIXED
