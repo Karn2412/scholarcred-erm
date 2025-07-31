@@ -14,115 +14,101 @@ const PersonalDetailsPage: React.FC = () => {
   const [basicDetails, setBasicDetails] = useState<any>({});
   const [bankingDetails, setBankingDetails] = useState<any>({});
   const [usersdocuments, setDocuments] = useState<any>({
-    panCardUrl: "",
-    aadhaarCardUrl: "",
-    blankChequeUrl: "",
-    documents: [],
-  });
+  documents: [],  // ✅ Keep only this
+});
 
-  const handleSubmit = async () => {
-    try {
-      const { data: authUser } = await supabase.auth.getUser();
-      const userId = authUser?.user?.id;
 
-      if (!userId) {
-        alert("User not logged in");
-        return;
-      }
+const handleSubmit = async () => {
+  try {
+    const { data: authUser } = await supabase.auth.getUser();
+    const userId = authUser?.user?.id;
 
-      const uploadFile = async (file: File, folder: string) => {
-  const safeName = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`; // sanitize file name
-  const filePath = `${folder}/${safeName}`;
+    if (!userId) {
+      alert("User not logged in");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("company_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const companyId = profile?.company_id;
+    if (!companyId) {
+      alert("No company assigned to this user.");
+      return;
+    }
+
+    // Upload helper
+  const uploadFile = async (file: File) => {
+  const sanitizedName = file.name.replace(/\s+/g, "_").replace(/[\[\]]/g, "");
+  const path = `documents/${Date.now()}_${sanitizedName}`;
 
   const { data, error } = await supabase.storage
-    .from("usersdocuments") // ✅ only bucket name here
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: true,
-    });
-
-  if (error) throw error;
-
-  return supabase.storage
     .from("usersdocuments")
-    .getPublicUrl(filePath).data.publicUrl;
+    .upload(path, file, { cacheControl: "3600", upsert: true });
+
+  if (error) {
+    console.error("Upload error:", error.message);
+    throw error;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("usersdocuments")
+    .getPublicUrl(path);
+
+  return publicUrlData.publicUrl;
+};
+
+
+    // Upload all files in documents[]
+    const documentUploads = await Promise.all(
+      (usersdocuments.documents || []).map(async (doc: any) => {
+        if (doc.file instanceof File) {
+          const url = await uploadFile(doc.file);
+          return { name: doc.name, url };
+        }
+        return { name: doc.name, url: doc.url };
+      })
+    );
+
+    // Save in DB
+    const { error } = await supabase.from("personal_details").upsert(
+      {
+        id: userId,
+        company_id: companyId,
+        date_of_birth: basicDetails.date_of_birth,
+        age: basicDetails.age,
+        pan_no: basicDetails.pan_no,
+        fathers_name: basicDetails.father_name,
+        personal_email: basicDetails.personal_email,
+        address_1: basicDetails.address_line1,
+        address_2: basicDetails.address_line2,
+        differently_abled: basicDetails.differently_abled_type,
+        city: basicDetails.city,
+        state: basicDetails.state,
+        pincode: basicDetails.pincode,
+        full_name: bankingDetails.name,
+        account_number: bankingDetails.accountNumber,
+        ifsc_code: bankingDetails.ifscCode,
+        bank_name: bankingDetails.bankName,
+        branch_name: bankingDetails.branchName,
+        documents: documentUploads, // ✅ Only user-uploaded docs
+      },
+      { onConflict: "id" }
+    );
+
+    if (error) throw error;
+
+    alert("Details submitted/updated successfully!");
+  } catch (error) {
+    console.error("Submit Error:", error);
+    alert("Submission failed.");
+  }
 };
 ;
-
-      const panImagePath =
-  usersdocuments.panCard instanceof File
-    ? await uploadFile(usersdocuments.panCard, "pan")
-    : usersdocuments.panCardUrl;
-
-
-      const aadhaarImagePath =
-        usersdocuments.aadhaarCard instanceof File
-          ? await uploadFile(
-              usersdocuments.aadhaarCard,
-              `aadhaar/${Date.now()}_${usersdocuments.aadhaarCard.name}`
-            )
-          : usersdocuments.aadhaarCardUrl;
-
-      const blankChequePath =
-        usersdocuments.blankCheque instanceof File
-          ? await uploadFile(
-              usersdocuments.blankCheque,
-              `cheque/${Date.now()}_${usersdocuments.blankCheque.name}`
-            )
-          : usersdocuments.blankChequeUrl;
-
-      const documentList = [
-        { name: "Upload PAN Card", url: panImagePath },
-        { name: "Upload Aadhaar Card", url: aadhaarImagePath },
-        { name: "Upload Blank Cheque", url: blankChequePath },
-        ...(usersdocuments.documents || []).map((doc: any) => {
-          if (doc.file instanceof File) {
-            const path = `documents/${Date.now()}_${doc.file.name}`;
-            return uploadFile(doc.file, path).then((url) => ({
-              name: doc.name,
-              url,
-            }));
-          }
-          return Promise.resolve({ name: doc.name, url: doc.url });
-        }),
-      ];
-
-      // ✅ Resolve all uploads
-      const uploadedDocs = await Promise.all(documentList);
-
-      // ✅ Use uploadedDocs instead of documentList
-      const { error } = await supabase.from("personal_details").upsert(
-        {
-          id: userId,
-          date_of_birth: basicDetails.date_of_birth,
-          age: basicDetails.age,
-          pan_no: basicDetails.pan_no,
-          fathers_name: basicDetails.father_name,
-          personal_email: basicDetails.personal_email,
-          address_1: basicDetails.address_line1,
-          address_2: basicDetails.address_line2,
-          differently_abled: basicDetails.differently_abled_type,
-          city: basicDetails.city,
-          state: basicDetails.state,
-          pincode: basicDetails.pincode,
-          full_name: bankingDetails.name,
-          account_number: bankingDetails.accountNumber,
-          ifsc_code: bankingDetails.ifscCode,
-          bank_name: bankingDetails.bankName,
-          branch_name: bankingDetails.branchName,
-          documents: uploadedDocs, // ✅ FIXED
-        },
-        { onConflict: "id" }
-      );
-
-      if (error) throw error;
-
-      alert("Details submitted/updated successfully!");
-    } catch (error) {
-      console.error("Submit Error:", error);
-      alert("Submission failed.");
-    }
-  };
+;
 
   useEffect(() => {
     const fetchPersonalDetails = async () => {
@@ -170,12 +156,8 @@ const PersonalDetailsPage: React.FC = () => {
         branchName: data.branch_name,
       });
 
-      setDocuments({
-        panCardUrl: data.pan_img,
-        aadhaarCardUrl: data.aadhar_img,
-        blankChequeUrl: data.bank_img,
-        documents: data.documents || [],
-      });
+      setDocuments(() => ({
+        documents:  data.documents || [],   }));
 
       console.log("Fetched Personal Details:", data);
     };

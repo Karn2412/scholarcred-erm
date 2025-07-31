@@ -1,44 +1,44 @@
-import React, { useEffect, useState } from 'react';
-
-
-import { useUser } from '../../context/UserContext';
-import EmployeeRow from './EmployeeRow';
-import { supabase } from '../../supabaseClient';
+import React, { useEffect, useState } from "react";
+import { useUser } from "../../context/UserContext";
+import EmployeeRow from "./EmployeeRow";
+import { supabase } from "../../supabaseClient";
 
 interface Employee {
   id: string;
   name: string;
   email: string;
   number: string;
-
+  status?: boolean;
 }
 
 const EmployeeTable = () => {
   const [data, setData] = useState<Employee[]>([]);
-  
-  
-  const { userData } = useUser(); // contains company_id from admin table
-console.log('userData in EmployeeTable:', userData);
+  const { userData } = useUser(); // contains company_id
 
   useEffect(() => {
     const fetchEmployees = async () => {
       if (!userData?.company_id) return;
 
+      // ✅ Fetch from the view
       const { data, error } = await supabase
-      
-      
-        .from('user_with_email')
-        .select('id, name, email, number') 
-        .eq('company_id', userData.company_id);
-        
-        console.log('Fetching employees for company:', userData.company_id);
-        
+        .from("user_with_email")
+        .select("auth_id, email, name, number, company_id, is_active")
+        .eq("company_id", userData.company_id);
+
       if (error) {
-        console.error('Error fetching employees:', error.message);
+        console.error("Error fetching employees:", error.message);
         return;
       }
 
-      setData(data || []);
+      const formatted = data.map((emp: any) => ({
+        id: emp.auth_id,
+        name: emp.name,
+        email: emp.email,
+        number: emp.number,
+        status: emp.is_active,
+      }));
+
+      setData(formatted);
     };
 
     fetchEmployees();
@@ -49,12 +49,12 @@ console.log('userData in EmployeeTable:', userData);
       <table className="min-w-full text-sm mt-4">
         <thead className="bg-gray-50 text-gray-500 font-medium">
           <tr>
-            <th className="px-4 py-2 text-left">Employee id</th>
-            <th className="px-4 py-2 text-left">Employee Name</th>
+            <th className="px-4 py-2 text-left">Employee ID</th>
+            <th className="px-4 py-2 text-left">Name</th>
             <th className="px-4 py-2 text-left">Work Email</th>
-            <th className="px-4 py-2 text-left">Mobile number</th>
-            <th className="px-4 py-2 text-left">Employee Status</th>
-            <th className="px-4 py-2 text-left">View More</th>
+            <th className="px-4 py-2 text-left">Mobile</th>
+            <th className="px-4 py-2 text-left">Status</th>
+            <th className="px-4 py-2 text-left">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -66,8 +66,9 @@ console.log('userData in EmployeeTable:', userData);
 
       <div className="relative py-6">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent z-0 mt-5"></div>
-        <div className="h-1"></div>
-        <p className="text-center text-sm text-gray-500 z-10 relative">End of results</p>
+        <p className="text-center text-sm text-gray-500 z-10 relative">
+          End of results
+        </p>
       </div>
     </div>
   );
