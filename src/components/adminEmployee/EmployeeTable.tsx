@@ -15,32 +15,34 @@ const EmployeeTable = () => {
   const [data, setData] = useState<Employee[]>([]);
   const { userData } = useUser(); // contains company_id
 
+  // ✅ Move fetchEmployees OUTSIDE useEffect
+ const fetchEmployees = async () => {
+  if (!userData?.company_id || !userData?.id) return;
+
+  const { data, error } = await supabase
+    .from("user_with_email")
+    .select("auth_id, email, name, number, company_id, is_active")
+    .eq("company_id", userData.company_id) // ✅ Same company
+    .neq("auth_id", userData.id);         // ✅ Exclude logged-in user
+
+  if (error) {
+    console.error("Error fetching employees:", error.message);
+    return;
+  }
+
+  const formatted = data.map((emp: any) => ({
+    id: emp.auth_id,
+    name: emp.name,
+    email: emp.email,
+    number: emp.number,
+    status: emp.is_active,
+  }));
+
+  setData(formatted);
+};
+
+
   useEffect(() => {
-    const fetchEmployees = async () => {
-      if (!userData?.company_id) return;
-
-      // ✅ Fetch from the view
-      const { data, error } = await supabase
-        .from("user_with_email")
-        .select("auth_id, email, name, number, company_id, is_active")
-        .eq("company_id", userData.company_id);
-
-      if (error) {
-        console.error("Error fetching employees:", error.message);
-        return;
-      }
-
-      const formatted = data.map((emp: any) => ({
-        id: emp.auth_id,
-        name: emp.name,
-        email: emp.email,
-        number: emp.number,
-        status: emp.is_active,
-      }));
-
-      setData(formatted);
-    };
-
     fetchEmployees();
   }, [userData]);
 
@@ -59,17 +61,14 @@ const EmployeeTable = () => {
         </thead>
         <tbody>
           {data.map((emp) => (
-            <EmployeeRow key={emp.id} employee={emp} />
+            <EmployeeRow
+              key={emp.id}
+              employee={emp}
+              onRefresh={fetchEmployees} // ✅ Now works correctly
+            />
           ))}
         </tbody>
       </table>
-
-      <div className="relative py-6">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent z-0 mt-5"></div>
-        <p className="text-center text-sm text-gray-500 z-10 relative">
-          End of results
-        </p>
-      </div>
     </div>
   );
 };
