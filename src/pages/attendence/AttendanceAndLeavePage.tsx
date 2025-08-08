@@ -11,63 +11,78 @@ const AttendanceAndLeavePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  const fetchAttendance = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      const userId = session?.user?.id;
-      if (!userId) return;
+    const userId = session?.user?.id;
+    if (!userId) return;
 
-      // Get the admin's company ID
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('company_id')
-        .eq('id', userId)
-        .single();
+    // Step 1: Get admin's company_id from public.users
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('company_id')
+      .eq('id', userId)
+      .single();
 
-      if (userError || !userData?.company_id) return;
+    if (userError || !userData?.company_id) return;
 
-      const companyId = userData.company_id;
+    const companyId = userData.company_id;
 
-      // Get all attendance records for that company
-      const { data: attendance, error } = await supabase
-        .from("attendance")
-        .select(`
-          id,
-          check_in_time,
-          check_out_time,
-          attendance_status(status),
-          users(name, email, designation, company_id)
-        `)
-        .order('check_in_time', { ascending: false });
+    // Step 2: Get all users in the same company
+    const { data: companyUsers, error: companyUsersError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('company_id', companyId);
 
-      if (error) {
-        console.error('Attendance fetch error:', error);
-        return;
-      }
+    if (companyUsersError || !companyUsers) return;
 
-      // Filter attendance by matching company_id
-      const filtered = attendance.filter((a) => a.users?.company_id === companyId);
+    const userIds = companyUsers.map((u) => u.id);
 
-      // Transform for table
-      const formatted = filtered.map((a) => ({
-        id: a.id,
-        name: a.users?.name ?? 'Unknown',
-        email: a.users?.email ?? '—',
-        designation: a.users?.designation ?? '—',
-        department: a.users?.company_id ?? '—',
-        checkIn: a.check_in_time ? new Date(a.check_in_time).toLocaleTimeString() : '--',
-        checkOut: a.check_out_time ? new Date(a.check_out_time).toLocaleTimeString() : '--',
-        status: a.attendance_status?.status ?? 'Unknown',
-      }));
+    // Step 3: Fetch attendance for those user IDs
+    const { data: attendance, error: attendanceError } = await supabase
+      .from('employee_attendance_summary')
+      .select(`
+        user_id,
+        name,
+        attendance_date,
+        total_worked_hours,
+        expected_hours,
+        check_in_latitudes,
+        check_in_longitudes,
+        check_out_latitudes,
+        check_out_longitudes,
+        attendance_statuses
+      `)
+      .in('user_id', userIds)
+      .order('attendance_date', { ascending: false });
 
-      setAttendanceData(formatted);
-      setLoading(false);
-    };
+    if (attendanceError) {
+      console.error('Attendance fetch error:', attendanceError);
+      return;
+    }
 
-    fetchAttendance();
-  }, []);
+    const formatted = attendance.map((a) => ({
+      user_id: a.user_id,
+      name: a.name ?? 'Unknown',
+      attendance_date: a.attendance_date,
+      total_worked_hours: a.total_worked_hours,
+      expected_hours: a.expected_hours,
+      check_in_latitudes: a.check_in_latitudes || [],
+      check_in_longitudes: a.check_in_longitudes || [],
+      check_out_latitudes: a.check_out_latitudes || [],
+      check_out_longitudes: a.check_out_longitudes || [],
+      attendance_statuses: a.attendance_statuses || [],
+    }));
+
+    setAttendanceData(formatted);
+    setLoading(false);
+  };
+
+  fetchAttendance();
+}, []);
+
 
   return (
     <div className="flex">

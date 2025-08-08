@@ -20,6 +20,8 @@ import ReimbursementPage from './staff-module/pages/reimbursments/StaffReimburse
 import PayRunsPageAdmin from './pages/payRuns/PayRunsPageAdmin';
 import LoginPage from './pages/login/Login';
 import ProtectedRoute from './ProtectedRoute';
+import 'leaflet/dist/leaflet.css';
+
 
 
 const App: React.FC = () => {
@@ -39,7 +41,7 @@ const App: React.FC = () => {
         <Route path="/attendance" element={
   <ProtectedRoute><AttendanceAndLeavePage /></ProtectedRoute>
 } />
-        <Route path="/attendance-detail/:id" element={
+        <Route path="/attendance-detail/:userId" element={
   <ProtectedRoute><EmployeeAttendanceDetailPage /></ProtectedRoute>
 } />
         <Route path="/payruns" element={
@@ -59,7 +61,7 @@ const App: React.FC = () => {
 } />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/staff/personal-details" element={<PersonalDetailsPage/>} />
-        <Route path="/staff/attendance" element={<EmployeeAttendancePage/>} />
+        <Route path="/staff/attendance" element={<EmployeeAttendancePage />} />
         <Route path="/staff/pay-slips" element={<PayRunsPage/>} />
         <Route path="/staff/reimbursements" element={<ReimbursementPage />} />
 

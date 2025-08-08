@@ -1,43 +1,53 @@
 import React from 'react';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaMapMarkerAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 interface AttendanceItem {
-  id: number;
+  user_id: number;
   name: string;
-  department: string;
-  designation: string;
-  checkIn: string;
-  status: string;
-  checkOut: string;
+  attendance_date: string;
+  total_worked_hours: number;
+  expected_hours: number;
+  check_in_latitudes: number[];
+  check_in_longitudes: number[];
+  check_out_latitudes: number[];
+  check_out_longitudes: number[];
+  attendance_statuses: string[];
 }
 
 interface AttendanceTableProps {
   attendanceData: AttendanceItem[];
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Checked In':
-      return 'bg-green-500';
-    case 'Absent':
-      return 'bg-red-500';
-    case 'Regularization':
-      return 'bg-orange-400';
-    case 'Approved Off':
-      return 'bg-blue-500';
-    default:
-      return 'bg-gray-300';
-  }
-};
-
-
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ attendanceData }) => {
+  const navigate = useNavigate();
+  const today = new Date().toISOString().split('T')[0];
 
-    const navigate = useNavigate();
-const handleViewClick = (id:number) => {
-  navigate(`/attendance-detail/${id}`);
-};
+  const todayData = attendanceData.filter(
+    (item) => item.attendance_date === today
+  );
+
+  const handleViewClick = (userId: number) => {
+    navigate(`/attendance-detail/${userId}`);
+    console.log(`Navigating to attendance detail for user ID: ${userId}`);
+  };
+  
+
+  const renderLocationIcon = (lat?: number, long?: number) => {
+    if (!lat || !long) return '--';
+    return (
+      <a
+        href={`https://www.google.com/maps?q=${lat},${long}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800"
+        title={`${lat.toFixed(4)}, ${long.toFixed(4)}`}
+      >
+        <FaMapMarkerAlt size={16} />
+      </a>
+    );
+  };
+
   return (
     <div className="overflow-x-auto rounded border border-gray-200 shadow-sm">
       <table className="min-w-full text-sm">
@@ -45,55 +55,45 @@ const handleViewClick = (id:number) => {
           <tr>
             <th className="py-2 px-3 text-left">SL No</th>
             <th className="py-2 px-3 text-left">Employee Name</th>
-            <th className="py-2 px-3 text-left">Department</th>
-            <th className="py-2 px-3 text-left">Designation</th>
-            <th className="py-2 px-3 text-left">Check In</th>
+            <th className="py-2 px-3 text-left">Check In Location</th>
             <th className="py-2 px-3 text-left">Status</th>
-            <th className="py-2 px-3 text-left">Check Out</th>
+            <th className="py-2 px-3 text-left">Check Out Location</th>
             <th className="py-2 px-3 text-left">View</th>
           </tr>
         </thead>
         <tbody>
-          {attendanceData.map((item, index) => (
-            <tr
-              key={item.id}
-              className={`${index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100`}
-            >
-              <td className="py-2 px-3">{index + 1}</td>
-              <td className="py-2 px-3">{item.name}</td>
-              <td className="py-2 px-3">{item.department}</td>
-              <td className="py-2 px-3">{item.designation}</td>
-
-              {/* Check In */}
-              <td className="py-2 px-3">{item.checkIn}</td>
-
-              {/* Status Bar with Hover Tooltip */}
-              <td className="py-2 px-3">
-                <div className="relative group">
-                  <div
-                    className={`w-24 h-1 rounded-full ${getStatusColor(item.status)} transition-all duration-200`}
-                  ></div>
-
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap shadow-lg z-10">
-                    {item.checkIn} - {item.checkOut !== '--' ? item.checkOut : '14:11'} <br />
-                    <span className="text-blue-300">5 Hours</span>
-                  </div>
-                </div>
+          {todayData.length > 0 ? (
+            todayData.map((item, index) => (
+              <tr
+                key={item.user_id}
+                className={`${index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100`}
+              >
+                <td className="py-2 px-3">{index + 1}</td>
+                <td className="py-2 px-3">{item.name}</td>
+                <td className="py-2 px-3">
+                  {renderLocationIcon(item.check_in_latitudes[0], item.check_in_longitudes[0])}
+                </td>
+                <td className="py-2 px-3">{item.attendance_statuses[0] || '--'}</td>
+                <td className="py-2 px-3">
+                  {renderLocationIcon(item.check_out_latitudes[0], item.check_out_longitudes[0])}
+                </td>
+                <td className="py-2 px-3">
+                  <button
+                    onClick={() => handleViewClick(item.user_id)}
+                    className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1"
+                  >
+                    View <FaEye />
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={6} className="text-center py-4 text-gray-500">
+                No attendance records for today.
               </td>
-
-              {/* Check Out */}
-              <td className="py-2 px-3">{item.checkOut}</td>
-
-              {/* View Button */}
-              <td className="py-2 px-3">
-  <button onClick={() => handleViewClick(item.id)} className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1">
-    View <FaEye />
-  </button>
-</td>
-
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

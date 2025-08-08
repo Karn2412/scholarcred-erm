@@ -1,24 +1,23 @@
+// AttendanceWeeklyTable.tsx
 import React from 'react';
-import { FaSyncAlt } from 'react-icons/fa';
+import { FaSyncAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { isBefore, isAfter, startOfWeek, addDays, format } from 'date-fns';
 
 interface AttendanceRecord {
   day: string;
   date: string;
-  checkIn: string;
-  checkOut: string;
-  hours: string;
+  hoursWorked: string;
+  expectedHours: string;
   status: string;
+  checkInLocation: { lat: number; long: number } | null;
+  checkOutLocation: { lat: number; long: number } | null;
 }
 
-const attendanceDetailData: AttendanceRecord[] = [
-  { day: 'Monday',    date: '18-05-2025', checkIn: '8:35',  checkOut: '--',    hours: '8',  status: 'Checked In'     },
-  { day: 'Tuesday',   date: '19-05-2025', checkIn: '8:35',  checkOut: '18:35', hours: '7',  status: 'Completed'      },
-  { day: 'Wednesday', date: '20-05-2025', checkIn: '--',    checkOut: '--',    hours: '2',  status: 'Absent'         },
-  { day: 'Thursday',  date: '21-05-2025', checkIn: '--',    checkOut: '--',    hours: '6',  status: 'Approved Off'   },
-  { day: 'Friday',    date: '22-05-2025', checkIn: '8:35',  checkOut: '--',    hours: '12', status: 'Regularize'     },
-  { day: 'Saturday',  date: '23-05-2025', checkIn: '8:35',  checkOut: '9:45',  hours: '10', status: 'Incomplete'     },
-  { day: 'Sunday',    date: '24-05-2025', checkIn: '--',    checkOut: '--',    hours: '9',  status: 'Off Day'        },
-];
+interface AttendanceWeeklyTableProps {
+  data: AttendanceRecord[];
+}
+
+const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const getDotColor = (status: string) => {
   switch (status) {
@@ -31,61 +30,113 @@ const getDotColor = (status: string) => {
       return 'bg-blue-500';
     case 'Regularize':
       return 'bg-orange-400';
+    case 'Incomplete':
+      return 'bg-yellow-500';
     default:
       return 'bg-gray-400';
   }
 };
 
-const AttendanceWeeklyTable: React.FC = () => (
-  <div className="overflow-auto bg-white rounded-2xl shadow p-6">
-    <div className="rounded-xl overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-gray-600 text-left">
-          <tr>
-            <th className="px-4 py-3">Day</th>
-            <th className="px-4 py-3">Date</th>
-            <th className="px-4 py-3">Check In</th>
-            <th className="px-4 py-3">Progress</th>
-            <th className="px-4 py-3">Check Out</th>
-            <th className="px-4 py-3">Hours</th>
-            <th className="px-4 py-3">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendanceDetailData.map((row, idx) => {
-            const dotColor = getDotColor(row.status);
-            const isEven = idx % 2 === 0;
+const openMap = (lat: number, long: number) => {
+  window.open(`https://www.google.com/maps?q=${lat},${long}`, '_blank');
+};
 
-            return (
+const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) => {
+  const today = new Date();
+  const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+  const weekData = weekDays.map((day, index) => {
+    const date = addDays(start, index);
+    const dateStr = format(date, 'yyyy-MM-dd');
+
+    const matched = data.find((d) => d.date === dateStr);
+    const isWeekend = day === 'Saturday' || day === 'Sunday';
+
+    if (matched) {
+      // Override if check-in exists
+      const status =
+        matched.checkInLocation &&
+        !['Completed', 'Regularize', 'Approved Off'].includes(matched.status)
+          ? 'Checked In'
+          : matched.status;
+
+      return { ...matched, status, day };
+    }
+
+    let status = 'Absent';
+    if (isAfter(date, today)) {
+      status = 'Incomplete';
+    } else if (isWeekend && isBefore(date, today)) {
+      status = 'Approved Off';
+    }
+
+    return {
+      day,
+      date: dateStr,
+      hoursWorked: '0.00',
+      expectedHours: '0.00',
+      checkInLocation: null,
+      checkOutLocation: null,
+      status,
+    };
+  });
+
+  return (
+    <div className="overflow-auto bg-white rounded-2xl shadow p-6">
+      <div className="rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600 text-left">
+            <tr>
+              <th className="px-4 py-3">Day</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Worked / Expected (hrs)</th>
+              <th className="px-4 py-3">Check-In</th>
+              <th className="px-4 py-3">Check-Out</th>
+              <th className="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weekData.map((row, idx) => (
               <tr
                 key={idx}
-                className={`${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition duration-200`}
+                className={`${
+                  idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'
+                } hover:bg-blue-100 transition duration-200`}
               >
                 <td className="px-4 py-3 rounded-l-xl">{row.day}</td>
                 <td className="px-4 py-3">{row.date}</td>
-                <td className="px-4 py-3">{row.checkIn}</td>
-
-                <td className="px-4 py-3 w-40">
-                  <div className="flex items-center space-x-1">
-                    {/* Start Dot */}
-                    <span className={`h-2 w-2 rounded-full ${row.checkIn !== '--' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-
-                    {/* Track */}
-                    <div className="flex-1 h-1 rounded bg-gray-300 relative overflow-hidden">
-                      <div
-                        className={`absolute left-0 top-0 h-full ${row.checkIn !== '--' ? 'bg-green-500' : 'bg-gray-400'}`}
-                        style={{ width: row.checkIn !== '--' && row.checkOut !== '--' ? '100%' : '50%' }}
-                      ></div>
-                    </div>
-
-                    {/* End Dot */}
-                    <span className={`h-2 w-2 rounded-full ${row.checkOut !== '--' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                  </div>
+                <td className="px-4 py-3">
+                  {row.hoursWorked} / {row.expectedHours}
                 </td>
-
-                <td className="px-4 py-3">{row.checkOut}</td>
-                <td className="px-4 py-3">{row.hours}</td>
-
+                <td className="px-4 py-3">
+                  {row.checkInLocation ? (
+                    <button
+                      onClick={() =>
+                        openMap(row.checkInLocation!.lat, row.checkInLocation!.long)
+                      }
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <FaMapMarkerAlt className="text-sm" />
+                      <span>Map</span>
+                    </button>
+                  ) : (
+                    <span className="text-gray-400">N/A</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {row.checkOutLocation ? (
+                    <button
+                      onClick={() =>
+                        openMap(row.checkOutLocation!.lat, row.checkOutLocation!.long)
+                      }
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <FaMapMarkerAlt className="text-sm" />
+                      <span>Map</span>
+                    </button>
+                  ) : (
+                    <span className="text-gray-400">N/A</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 rounded-r-xl">
                   {row.status === 'Regularize' ? (
                     <button className="flex items-center space-x-2 px-3 py-1 text-sm bg-orange-400 text-white font-medium rounded-full">
@@ -100,12 +151,12 @@ const AttendanceWeeklyTable: React.FC = () => (
                   )}
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default AttendanceWeeklyTable;
