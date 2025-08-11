@@ -1,28 +1,100 @@
-import React, { useState } from "react";
-import {  FiRefreshCcw } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiSend } from "react-icons/fi";
+import { useUser } from "../../../context/UserContext";
+import { supabase } from "../../../supabaseClient";
 
 type Props = {
   onClose: () => void;
 };
 
-const RegularizeModal: React.FC<Props> = ({ onClose }) => {
-  const [formData, setFormData] = useState({
-    day: "Friday",
-    checkIn: "08:00",
-    checkOut: "18:00",
-    date: "22-05-2025",
-    reason: "Forgot to Checkout",
-  });
+const RegularizationRequestModal: React.FC<Props> = ({ onClose }) => {
+  const { userData } = useUser();
+  console.log("User Data:", userData);
 
+
+  const [formData, setFormData] = useState({
+    day: "",
+    checkIn: "",
+    checkOut: "",
+    date: "",
+    reason: "",
+  });
+  console.log("Form Data:", formData);
+
+  const [loading, setLoading] = useState(false);
+
+  // If userData is missing, don't render the modal at all
+  if (!userData) {
+    console.error("User data not found — not rendering modal");
+    return null;
+  }
+
+  // Prevent rendering if IDs are missing (avoids UUID "" error)
+  if (!userData.company_id || !userData.id) {
+    console.error("Missing user or company ID");
+    alert(
+      "Missing user or company information. Please try logging in again."
+    );
+    return null;
+  }
+  
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!formData.day || !formData.checkIn || !formData.checkOut || !formData.date || !formData.reason) {
+    alert("Please fill in all required fields");
+    return;
+  }
+
+  if (!userData.company_id || !userData.id || userData.company_id.length !== 36 || userData.id.length !== 36) {
+    alert("Invalid user or company ID");
+    return;
+  }
+
+  setLoading(true);
+
+  const payload = {
+    day: formData.day,
+    check_in_time: formData.checkIn,
+    check_out_time: formData.checkOut,
+    date: formData.date,
+    reason: formData.reason,
+    company_id: userData.company_id,
+    user_id: userData.id,
+  };
+  console.log("Submitting payload:", payload);
+
+  try {
+    const { error } = await supabase
+      .from("regularization_request")
+      .insert([payload]);
+
+    if (error) throw error;
+
+    console.log("✅ Regularization request submitted successfully!");
+    setFormData({ day: "", checkIn: "", checkOut: "", date: "", reason: "" });
+    onClose();
+  } catch (err: any) {
+    console.error("❌ Submit error:", err);
+    alert(err.message || "Failed to submit regularization request");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-      <div className=" ms-50 relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+    >
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -32,11 +104,16 @@ const RegularizeModal: React.FC<Props> = ({ onClose }) => {
         </button>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Regularize</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Regularization Request
+        </h2>
 
-        {/* Form Box with gray background */}
+        {/* Form Box */}
         <div className="bg-gray-200 rounded-2xl p-6">
-          <form className="grid grid-cols-3 gap-6">
+          <form
+            className="grid grid-cols-3 gap-6"
+            onSubmit={handleSubmit}
+          >
             {/* Day */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -54,7 +131,7 @@ const RegularizeModal: React.FC<Props> = ({ onClose }) => {
             {/* Check In */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Check In Time <span className="text-red-500">*</span>
+                Check In <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -68,7 +145,7 @@ const RegularizeModal: React.FC<Props> = ({ onClose }) => {
             {/* Check Out */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Check Out Time <span className="text-red-500">*</span>
+                Check Out <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -85,11 +162,11 @@ const RegularizeModal: React.FC<Props> = ({ onClose }) => {
                 Date <span className="text-red-500">*</span>
               </label>
               <input
+                type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
                 className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                placeholder="Date"
               />
             </div>
 
@@ -106,21 +183,29 @@ const RegularizeModal: React.FC<Props> = ({ onClose }) => {
                 placeholder="Reason"
               />
             </div>
-          </form>
-        </div>
 
-        {/* Submit Button */}
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => alert("Submitted")}
-            className="flex items-center gap-2 bg-orange-500 text-white px-6 py-2 rounded-xl hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-200"
-          >
-            Regularize <FiRefreshCcw className="w-4 h-4" />
-          </button>
+            {/* Submit Button */}
+            <div className="col-span-3 mt-6 flex justify-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                {loading ? (
+                  "Submitting..."
+                ) : (
+                  <>
+                    Submit Request <FiSend className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   );
 };
 
-export default RegularizeModal;
+export default RegularizationRequestModal;
+
