@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FiSend } from "react-icons/fi";
 import { useUser } from "../../../context/UserContext";
 import { supabase } from "../../../supabaseClient";
@@ -15,10 +15,9 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
   }
 
   const [formData, setFormData] = useState({
-    day: "",
-    type: "",
     duration: "",
-    date: "",
+    start_date: "",
+    end_date: "",
     reason: "",
   });
 
@@ -35,18 +34,20 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
     setLoading(true);
 
     try {
-      // Insert directly into leave_request
+      // Determine start and end date
+      let startDate = formData.start_date;
+      let endDate = formData.end_date || formData.start_date; // if single day leave
+
       const { error: insertErr } = await supabase
-        .from("leave_request")
+        .from("attendance_requests")
         .insert([
           {
-            date: formData.date,
-            type: formData.type,
+            request_type: "LEAVE",
+            start_date: startDate,
+            end_date: endDate,
             reason: formData.reason,
             company_id: userData.company_id,
             user_id: userData.id,
-            duration: formData.duration,
-            day: formData.day || null,
           },
         ]);
 
@@ -63,11 +64,8 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-    >
-      <div className="ms-50 relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -83,41 +81,7 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
 
         {/* Form Box */}
         <div className="bg-gray-200 rounded-2xl p-6">
-          <form className="grid grid-cols-3 gap-6">
-            {/* Day */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Day <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="day"
-                value={formData.day}
-                onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                placeholder="Day"
-              />
-            </div>
-
-            {/* Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                <option value="">Select Leave Type</option>
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Casual Leave">Casual Leave</option>
-                <option value="Paid Leave">Paid Leave</option>
-                <option value="Maternity Leave">Maternity Leave</option>
-                <option value="Paternity Leave">Paternity Leave</option>
-              </select>
-            </div>
-
+          <form className="grid grid-cols-3 gap-6" onSubmit={handleSubmit}>
             {/* Duration */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -128,31 +92,48 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
                 value={formData.duration}
                 onChange={handleChange}
                 className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
+                required
               >
                 <option value="">Select Duration</option>
-                <option value="Full Day">Full Day</option>
-                <option value="Half Day - Morning">Half Day - Morning</option>
-                <option value="Half Day - Afternoon">Half Day - Afternoon</option>
-                <option value="Multiple Days">Multiple Days</option>
+                <option value="single">Single Day</option>
+                <option value="multiple">Multiple Days</option>
               </select>
             </div>
 
-            {/* Date */}
+            {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date <span className="text-red-500">*</span>
+                Start Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
-                name="date"
-                value={formData.date}
+                name="start_date"
+                value={formData.start_date}
                 onChange={handleChange}
+                required
                 className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
               />
             </div>
 
+            {/* End Date */}
+            {formData.duration === "multiple" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  required={formData.duration === "multiple"}
+                  className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
+                />
+              </div>
+            )}
+
             {/* Reason */}
-            <div className="col-span-2">
+            <div className="col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Reason <span className="text-red-500">*</span>
               </label>
@@ -160,22 +141,25 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
                 name="reason"
                 value={formData.reason}
                 onChange={handleChange}
+                required
                 className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                placeholder="Reason"
+                placeholder="Reason for leave"
               />
             </div>
-          </form>
-        </div>
 
-        {/* Submit Button */}
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            {loading ? "Submitting..." : <>Request Leave <FiSend className="w-4 h-4" /></>}
-          </button>
+            {/* Submit Button */}
+            <div className="col-span-3 mt-6 flex justify-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                {loading
+                  ? "Submitting..."
+                  : <>Request Leave <FiSend className="w-4 h-4" /></>}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

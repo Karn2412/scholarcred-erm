@@ -13,19 +13,37 @@ const AddEmployeePage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Store IDs returned from Step 1
+  const [employeeData, setEmployeeData] = useState({
+    userId: '',
+    companyId: '',
+  });
+
+  const handleEmployeeCreated = (userId: string, companyId: string) => {
+    setEmployeeData({ userId, companyId });
+    setCurrentStep(2); // Auto-advance to Salary Details
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <AddEmployeeForm />;
+        return (
+          <AddEmployeeForm
+            onEmployeeCreated={handleEmployeeCreated}
+          />
+        );
       case 2:
-        return <SalaryDetails />;
-      // Future: Add other step components here
+        return (
+          <SalaryDetails
+            userId={employeeData.userId}
+            companyId={employeeData.companyId}
+          />
+        );
       case 3:
         return <AssetAllocationForm />;
       case 4:
         return <PaymentInformationForm />;
-        
-        default:
+      default:
         return null;
     }
   };
@@ -37,28 +55,28 @@ const AddEmployeePage: React.FC = () => {
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         {/* Mobile header */}
         <div className="md:hidden flex justify-between items-center bg-white p-4 border-b border-gray-200">
-          <button onClick={() => setSidebarOpen(true)} className="text-gray-700 text-xl">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-700 text-xl"
+          >
             <FaBars />
           </button>
           <h2 className="text-lg font-semibold">Add Employee</h2>
         </div>
 
         {/* Top Header */}
-        <Header  />
+        <Header />
 
         {/* Main Content */}
         <main className="p-6 overflow-auto space-y-6">
           <div className="bg-white p-6 rounded-md shadow-sm">
-            <AddEmployeeStepper 
-             onStepChange={(step) => setCurrentStep(step)}
-            currentStep={currentStep} />
+            <AddEmployeeStepper
+              onStepChange={(step) => setCurrentStep(step)}
+              currentStep={currentStep}
+            />
 
             {/* Dynamic Step Form */}
-            <div className='bg-white p-5 rounded-2xl'>
-              {renderStep()}
-            </div>
-
-            
+            <div className="bg-white p-5 rounded-2xl">{renderStep()}</div>
           </div>
         </main>
       </div>

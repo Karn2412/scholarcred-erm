@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { supabase } from "../../../supabaseClient";
 
-const AddEmployeeForm: React.FC = () => {
+interface AddEmployeeFormProps {
+  onEmployeeCreated: (userId: string, companyId: string) => void;
+}
+
+const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({ onEmployeeCreated }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
@@ -13,7 +17,9 @@ const AddEmployeeForm: React.FC = () => {
     dateOfJoining: "",
     designation: "",
     department: "HR",
-    role_name: "staff" // ✅ Added role field
+    role_name: "staff",
+    work_start: "",
+    work_end: "",
   });
 
   const handleChange = (
@@ -30,6 +36,7 @@ const AddEmployeeForm: React.FC = () => {
     e.preventDefault();
 
     try {
+      // Get session token
       const {
         data: { session },
         error: sessionError,
@@ -41,13 +48,15 @@ const AddEmployeeForm: React.FC = () => {
       }
 
       const accessToken = session.access_token;
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+      // Get current logged-in user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         alert("Failed to get current user.");
         return;
       }
 
+      // Get company_id of current admin
       const { data: roleRecord, error: roleError } = await supabase
         .from("user_roles")
         .select("company_id, roles(role)")
@@ -58,7 +67,6 @@ const AddEmployeeForm: React.FC = () => {
         alert("User role not found.");
         return;
       }
-
       if (roleRecord.roles.role !== "admin") {
         alert("You are not an admin.");
         return;
@@ -82,7 +90,15 @@ const AddEmployeeForm: React.FC = () => {
         company_id: companyId,
         role_name: formData.role_name,
       };
+      // Helper function to convert HH:mm to seconds
+const timeToSeconds = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return hours * 3600 + minutes * 60;
+};
 
+
+      // Call Edge Function
       const response = await fetch(
         "https://xdcbcvvlbyizxhrbramv.supabase.co/functions/v1/my-function",
         {
@@ -100,7 +116,31 @@ const AddEmployeeForm: React.FC = () => {
       if (!response.ok) {
         alert(`❌ Failed: ${result.error}`);
       } else {
-        alert("✅ Employee added successfully!");
+        const newUserId = result.user_id;
+
+        // Insert work hours into working_hours table
+        const { error: workHoursError } = await supabase
+          .from("working_hours")
+          .insert([
+            {
+              company_id: companyId,
+              users_id: newUserId,
+                   work_start: timeToSeconds(formData.work_start), // ✅ converted to seconds
+      work_end: timeToSeconds(formData.work_end),     // ✅ converted to seconds
+              created_at: new Date().toISOString(),
+            },
+          ]);
+
+        if (workHoursError) {
+          alert(`⚠️ Employee created, but failed to set working hours: ${workHoursError.message}`);
+        } else {
+          alert("✅ Employee and working hours added successfully!");
+        }
+
+        // Pass IDs to parent
+        onEmployeeCreated(newUserId, companyId);
+
+        // Reset form
         setFormData({
           firstName: "",
           middleName: "",
@@ -112,18 +152,19 @@ const AddEmployeeForm: React.FC = () => {
           dateOfJoining: "",
           designation: "",
           department: "HR",
-          role_name: "user",
+          role_name: "staff",
+          work_start: "",
+          work_end: "",
         });
       }
     } catch (err: any) {
       alert("Unexpected error: " + err.message);
     }
   };
-
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow-sm">
       <div className="space-y-6 pr-6">
-        {/* ✅ Employee Name */}
+        {/* Employee Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Employee Name <span className="text-red-500">*</span>
@@ -156,7 +197,7 @@ const AddEmployeeForm: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Date of Joining */}
+        {/* Date of Joining */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,7 +213,7 @@ const AddEmployeeForm: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Email & Password */}
+        {/* Email & Password */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -202,7 +243,7 @@ const AddEmployeeForm: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Gender & Mobile */}
+        {/* Gender & Mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -234,7 +275,7 @@ const AddEmployeeForm: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Designation & Department */}
+        {/* Designation & Department */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -267,7 +308,7 @@ const AddEmployeeForm: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Role Selection */}
+        {/* Role Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Role <span className="text-red-500">*</span>
@@ -283,7 +324,35 @@ const AddEmployeeForm: React.FC = () => {
           </select>
         </div>
 
-        {/* ✅ Submit */}
+        {/* Work Hours */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Work Start Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              name="work_start"
+              value={formData.work_start}
+              onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Work End Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              name="work_end"
+              value={formData.work_end}
+              onChange={handleChange}
+              className="w-3/4 px-3 py-2 border border-blue-400 rounded-full"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
         <div className="pt-4">
           <button
             type="submit"
@@ -298,4 +367,3 @@ const AddEmployeeForm: React.FC = () => {
 };
 
 export default AddEmployeeForm;
-

@@ -31,6 +31,26 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ attendanceData }) => 
     navigate(`/attendance-detail/${userId}`);
     console.log(`Navigating to attendance detail for user ID: ${userId}`);
   };
+
+  // Helper to style status
+  const getStatusStyle = (status: string) => {
+    if (status === 'Rejected') {
+      return 'text-red-600 font-bold';
+    }
+    if (status === 'Regularize') {
+      return 'text-orange-500 font-semibold';
+    }
+    if (status === 'Checked In') {
+      return 'text-green-600 font-semibold';
+    }
+    if (status === 'Approved Off') {
+      return 'text-blue-600 font-semibold';
+    }
+    if (status === 'Absent') {
+      return 'text-gray-500';
+    }
+    return '';
+  };
   
 
   const renderLocationIcon = (lat?: number, long?: number) => {
@@ -54,6 +74,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ attendanceData }) => 
         <thead className="bg-gray-100 text-gray-700">
           <tr>
             <th className="py-2 px-3 text-left">SL No</th>
+            <th className="py-2 px-3 text-left">Day</th>
             <th className="py-2 px-3 text-left">Employee Name</th>
             <th className="py-2 px-3 text-left">Check In Location</th>
             <th className="py-2 px-3 text-left">Status</th>
@@ -63,33 +84,45 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ attendanceData }) => 
         </thead>
         <tbody>
           {todayData.length > 0 ? (
-            todayData.map((item, index) => (
-              <tr
-                key={item.user_id}
-                className={`${index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100`}
-              >
-                <td className="py-2 px-3">{index + 1}</td>
-                <td className="py-2 px-3">{item.name}</td>
-                <td className="py-2 px-3">
-                  {renderLocationIcon(item.check_in_latitudes[0], item.check_in_longitudes[0])}
-                </td>
-                <td className="py-2 px-3">{item.attendance_statuses[0] || '--'}</td>
-                <td className="py-2 px-3">
-                  {renderLocationIcon(item.check_out_latitudes[0], item.check_out_longitudes[0])}
-                </td>
-                <td className="py-2 px-3">
-                  <button
-                    onClick={() => handleViewClick(item.user_id)}
-                    className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1"
-                  >
-                    View <FaEye />
-                  </button>
-                </td>
-              </tr>
-            ))
+            todayData.map((item, index) => {
+              // Get day name from attendance_date
+              const dayName = item.attendance_date
+                ? new Date(item.attendance_date).toLocaleDateString('en-US', { weekday: 'long' })
+                : '--';
+              return (
+                <tr
+                  key={item.user_id}
+                  className={`${index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100`}
+                >
+                  <td className="py-2 px-3">{index + 1}</td>
+                  <td className="py-2 px-3">{dayName}</td>
+                  <td className="py-2 px-3">{item.name}</td>
+                  <td className="py-2 px-3">
+                    {renderLocationIcon(item.check_in_latitudes[0], item.check_in_longitudes[0])}
+                  </td>
+                  <td className={`py-2 px-3 ${getStatusStyle(item.attendance_statuses[0])}`}>{item.attendance_statuses[0] || '--'}</td>
+                  <td className="py-2 px-3">
+                    {renderLocationIcon(item.check_out_latitudes[0], item.check_out_longitudes[0])}
+                  </td>
+                  <td className="py-2 px-3">
+                    {/* If status is Rejected, disable approve actions (example: hide Approve button) */}
+                    {item.attendance_statuses[0] === 'Rejected' ? (
+                      <span className="bg-red-200 px-3 py-1 text-xs text-red-700 rounded">Rejected</span>
+                    ) : (
+                      <button
+                        onClick={() => handleViewClick(item.user_id)}
+                        className="bg-indigo-300 px-3 py-1 text-xs text-black rounded flex items-center gap-1"
+                      >
+                        View <FaEye />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan={6} className="text-center py-4 text-gray-500">
+              <td colSpan={7} className="text-center py-4 text-gray-500">
                 No attendance records for today.
               </td>
             </tr>

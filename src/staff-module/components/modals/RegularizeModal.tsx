@@ -44,7 +44,7 @@ const RegularizationRequestModal: React.FC<Props> = ({ onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!formData.day || !formData.checkIn || !formData.checkOut || !formData.date || !formData.reason) {
@@ -60,19 +60,19 @@ const RegularizationRequestModal: React.FC<Props> = ({ onClose }) => {
   setLoading(true);
 
   const payload = {
-    day: formData.day,
-    check_in_time: formData.checkIn,
-    check_out_time: formData.checkOut,
-    date: formData.date,
-    reason: formData.reason,
     company_id: userData.company_id,
     user_id: userData.id,
+    request_type: "REGULARIZATION",
+    requested_check_in: `${formData.date}T${formData.checkIn}:00+00:00`,
+    requested_check_out: `${formData.date}T${formData.checkOut}:00+00:00`,
+    reason: formData.reason
   };
+
   console.log("Submitting payload:", payload);
 
   try {
     const { error } = await supabase
-      .from("regularization_request")
+      .from("attendance_requests")
       .insert([payload]);
 
     if (error) throw error;
@@ -87,6 +87,7 @@ const RegularizationRequestModal: React.FC<Props> = ({ onClose }) => {
     setLoading(false);
   }
 };
+
 
 
   return (

@@ -1,18 +1,26 @@
 import React, { useState } from "react";
 import { FiSend } from "react-icons/fi";
+import { useUser } from "../../../context/UserContext";
+import { supabase } from "../../../supabaseClient";
 
 type Props = {
   onClose: () => void;
 };
 
-const WorkFromHome: React.FC<Props> = ({ onClose }) => {
+const WorkFromHomeRequestModal: React.FC<Props> = ({ onClose }) => {
+  const { userData } = useUser();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    day: "Friday",
-    location: "Sick Leave",
-    duration: "Full Day",
-    date: "2025-05-22",
-    reason: "Hospital Visit",
+    duration: "",
+    date: "",
+    reason: "",
   });
+
+  if (!userData || !userData.company_id || !userData.id) {
+    console.error("Missing user or company info");
+    alert("Please log in again.");
+    return null;
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -20,95 +28,70 @@ const WorkFromHome: React.FC<Props> = ({ onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Leave Requested:", formData);
-    // You can replace this with an API call
-    onClose();
+
+    if (!formData.duration || !formData.date || !formData.reason) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      company_id: userData.company_id,
+      user_id: userData.id,
+      request_type: "WFH",
+      start_date: formData.date,
+      end_date: formData.date,
+      reason: `${formData.reason} (${formData.duration})`,
+      status: "PENDING", // optional, defaults to PENDING
+    };
+
+    try {
+      const { error } = await supabase
+        .from("attendance_requests")
+        .insert([payload]);
+
+      if (error) throw error;
+
+      console.log("✅ WFH request submitted");
+      setFormData({ duration: "", date: "", reason: "" });
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Submission failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl mx-4">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-6 right-6 text-2xl text-gray-800 hover:text-black"
         >
           ✕
         </button>
-
-        {/* Title */}
         <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Work From Home Request
         </h2>
-
-        {/* Form Box */}
         <div className="bg-gray-200 rounded-2xl p-6">
-          <form
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            onSubmit={handleSubmit}
-          >
-            {/* Day */}
-            <div>
-              <label
-                htmlFor="day"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Day <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="day"
-                name="day"
-                value={formData.day}
-                onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                placeholder="Day"
-                required
-              />
-            </div>
-
-            {/* Type */}
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Location <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                required
-              >
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Casual Leave">Casual Leave</option>
-                <option value="Earned Leave">Earned Leave</option>
-              </select>
-            </div>
-
+          <form className="grid grid-cols-1 md:grid-cols-3 gap-6" onSubmit={handleSubmit}>
             {/* Duration */}
             <div>
-              <label
-                htmlFor="duration"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Duration <span className="text-red-500">*</span>
               </label>
               <select
-                id="duration"
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                required
+                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800"
               >
+                <option value="">Select duration</option>
                 <option value="Full Day">Full Day</option>
                 <option value="Half Day - Morning">Half Day - Morning</option>
                 <option value="Half Day - Evening">Half Day - Evening</option>
@@ -117,49 +100,39 @@ const WorkFromHome: React.FC<Props> = ({ onClose }) => {
 
             {/* Date */}
             <div>
-              <label
-                htmlFor="date"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
-                id="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                required
+                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800"
               />
             </div>
 
             {/* Reason */}
             <div className="md:col-span-2">
-              <label
-                htmlFor="reason"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Reason <span className="text-red-500">*</span>
               </label>
               <input
-                id="reason"
                 name="reason"
                 value={formData.reason}
                 onChange={handleChange}
-                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-300"
-                placeholder="Reason"
-                required
+                className="w-full rounded-full border border-blue-400 px-4 py-2 text-sm text-gray-800"
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div className="md:col-span-3 flex justify-center">
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                disabled={loading}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700"
               >
-                Send <FiSend className="w-4 h-4" />
+                {loading ? "Submitting..." : <>Send <FiSend className="w-4 h-4" /></>}
               </button>
             </div>
           </form>
@@ -169,4 +142,4 @@ const WorkFromHome: React.FC<Props> = ({ onClose }) => {
   );
 };
 
-export default WorkFromHome;
+export default WorkFromHomeRequestModal;

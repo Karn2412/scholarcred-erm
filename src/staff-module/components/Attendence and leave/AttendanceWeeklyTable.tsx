@@ -8,13 +8,14 @@ interface AttendanceRecord {
   date: string;
   hoursWorked: string;
   expectedHours: string;
-  status: string;
+  status: string; // e.g. Completed, Absent, Leave, WFH, Regularize, Approved Off, Incomplete, Checked In
   checkInLocation: { lat: number; long: number } | null;
   checkOutLocation: { lat: number; long: number } | null;
 }
 
 interface AttendanceWeeklyTableProps {
   data: AttendanceRecord[];
+  onRegularize?: (date: string) => void; // 👈 NEW
 }
 
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -28,6 +29,10 @@ const getDotColor = (status: string) => {
       return 'bg-red-500';
     case 'Approved Off':
       return 'bg-blue-500';
+    case 'Leave':
+      return 'bg-indigo-500';   // 👈 NEW
+    case 'WFH':
+      return 'bg-purple-500';   // 👈 NEW
     case 'Regularize':
       return 'bg-orange-400';
     case 'Incomplete':
@@ -41,27 +46,28 @@ const openMap = (lat: number, long: number) => {
   window.open(`https://www.google.com/maps?q=${lat},${long}`, '_blank');
 };
 
-const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) => {
+const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data, onRegularize }) => {
   const today = new Date();
   const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
   const weekData = weekDays.map((day, index) => {
     const date = addDays(start, index);
     const dateStr = format(date, 'yyyy-MM-dd');
-
     const matched = data.find((d) => d.date === dateStr);
     const isWeekend = day === 'Saturday' || day === 'Sunday';
 
     if (matched) {
-      // Override if check-in exists
+      // If already has a status from upstream, prefer that
+      // But if user is checked-in and not final, show "Checked In"
       const status =
         matched.checkInLocation &&
-        !['Completed', 'Regularize', 'Approved Off'].includes(matched.status)
+        !['Completed', 'Regularize', 'Approved Off', 'Leave', 'WFH'].includes(matched.status)
           ? 'Checked In'
           : matched.status;
 
       return { ...matched, status, day };
     }
 
+    // fallback cells for days not in provided data
     let status = 'Absent';
     if (isAfter(date, today)) {
       status = 'Incomplete';
@@ -98,9 +104,7 @@ const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) =
             {weekData.map((row, idx) => (
               <tr
                 key={idx}
-                className={`${
-                  idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'
-                } hover:bg-blue-100 transition duration-200`}
+                className={`${idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition duration-200`}
               >
                 <td className="px-4 py-3 rounded-l-xl">{row.day}</td>
                 <td className="px-4 py-3">{row.date}</td>
@@ -110,9 +114,7 @@ const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) =
                 <td className="px-4 py-3">
                   {row.checkInLocation ? (
                     <button
-                      onClick={() =>
-                        openMap(row.checkInLocation!.lat, row.checkInLocation!.long)
-                      }
+                      onClick={() => openMap(row.checkInLocation!.lat, row.checkInLocation!.long)}
                       className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <FaMapMarkerAlt className="text-sm" />
@@ -125,9 +127,7 @@ const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) =
                 <td className="px-4 py-3">
                   {row.checkOutLocation ? (
                     <button
-                      onClick={() =>
-                        openMap(row.checkOutLocation!.lat, row.checkOutLocation!.long)
-                      }
+                      onClick={() => openMap(row.checkOutLocation!.lat, row.checkOutLocation!.long)}
                       className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <FaMapMarkerAlt className="text-sm" />
@@ -139,7 +139,10 @@ const AttendanceWeeklyTable: React.FC<AttendanceWeeklyTableProps> = ({ data }) =
                 </td>
                 <td className="px-4 py-3 rounded-r-xl">
                   {row.status === 'Regularize' ? (
-                    <button className="flex items-center space-x-2 px-3 py-1 text-sm bg-orange-400 text-white font-medium rounded-full">
+                    <button
+                      onClick={() => onRegularize?.(row.date)} // 👈 NEW
+                      className="flex items-center space-x-2 px-3 py-1 text-sm bg-orange-400 text-white font-medium rounded-full"
+                    >
                       <span>Regularize</span>
                       <FaSyncAlt className="text-xs" />
                     </button>

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { supabase } from "../../supabaseClient";
+import PayRunDetailsModal from "./PayRunDetailsModal";
+ // ✅ The modal we created
 
 interface PayRun {
   id: string;
+  user_id: string;
   employee_name: string;
   salary: number;
   deductions: number;
@@ -14,38 +17,40 @@ interface PayRun {
 
 const PayRunsTable: React.FC = () => {
   const [payRunsData, setPayRunsData] = useState<PayRun[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>("2025-08"); // YYYY-MM
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchPayRuns = async () => {
       const { data, error } = await supabase
-        .from("pay_runs")
-        .select(`
-          id,
-          salary,
-          deductions,
-          incentives,
-          reimbursements,
-          total_pay,
-          pay_date,
-          employee_name   -- ✅ Correct alias based on FK
-        `);
-        console.log("Fetching pay runs data...", data);
+  .from("monthly_pay_runs")
+  .select(`
+    user_id,
+    employee_name,
+    monthly_ctc,
+    daily_expected_hours,
+    total_worked_hours,
+    base_pay
+  `);
+
 
       if (error) {
         console.error("❌ Error fetching pay runs:", error);
         return;
       }
 
-    const formatted = data.map((item: any) => ({
-  id: item.id,
-  employee_name: item.employee_name || "Unknown", // ✅ Name from users table
-  salary: item.salary,
-  deductions: item.deductions,
-  incentives: item.incentives,
-  reimbursements: item.reimbursements,
-  total_pay: item.total_pay,
+      const formatted = data.map((item: any) => ({
+  id: item.user_id,
+  user_id: item.user_id, // ✅ this is the missing field
+  employee_name: item.employee_name,
+  salary: item.monthly_ctc,
+  deductions: 0, // no deduction yet
+  incentives: 0, // placeholder
+  reimbursements: 0, // placeholder
+  total_pay: item.base_pay
 }));
-      console.log("✅ Pay runs data fetched successfully:", formatted);
+
 
       setPayRunsData(formatted);
     };
@@ -53,8 +58,25 @@ const PayRunsTable: React.FC = () => {
     fetchPayRuns();
   }, []);
 
+  const handleViewMore = (userId: string) => {
+    setSelectedUser(userId);
+    setShowModal(true);
+  };
+  console.log("payRunsData", payRunsData);
   return (
+    <>
     <div className="overflow-x-auto bg-white rounded-xl shadow-sm p-4">
+      {/* Month selector */}
+      <div className="mb-3 flex items-center gap-3">
+        <label className="text-sm font-medium">Select Month:</label>
+        <input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="border border-gray-300 rounded px-2 py-1"
+        />
+      </div>
+
       <table className="min-w-full text-sm border-separate border-spacing-y-2">
         <thead>
           <tr className="bg-gray-100 text-gray-600">
@@ -70,12 +92,8 @@ const PayRunsTable: React.FC = () => {
         </thead>
         <tbody>
           {payRunsData.map((item, index) => (
-            <tr
-              key={item.id}
-              className={`rounded-md shadow-sm hover:bg-blue-200 ${
-                index % 2 === 0 ? "bg-indigo-100" : "bg-purple-50"
-              }`}
-            >
+            <tr key={`${item.user_id}-${selectedMonth}`}>
+
               <td className="py-3 px-3 rounded-l-md">{index + 1}</td>
               <td className="py-3 px-3">{item.employee_name}</td>
               <td className="py-3 px-3">{item.salary}</td>
@@ -84,7 +102,10 @@ const PayRunsTable: React.FC = () => {
               <td className="py-3 px-3">{item.reimbursements}</td>
               <td className="py-3 px-3">{item.total_pay}</td>
               <td className="py-3 px-3 rounded-r-md">
-                <button className="text-gray-600 hover:text-black">
+                <button
+                  onClick={() => handleViewMore(item.user_id)}
+                  className="text-gray-600 hover:text-black"
+                >
                   <FaEye />
                 </button>
               </td>
@@ -92,8 +113,18 @@ const PayRunsTable: React.FC = () => {
           ))}
         </tbody>
       </table>
+
+      
     </div>
-  );
+    {showModal && selectedUser && (
+        <PayRunDetailsModal
+          userId={selectedUser}
+          month={selectedMonth}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      </>
+    );
 };
 
 export default PayRunsTable;

@@ -6,11 +6,13 @@ import ReimbursementRequestCard from '../../components/dashboard/ReimbursementRe
 import AttendanceChartCard from '../../components/dashboard/AttendanceChartCard';
 import WorkRequestCard from '../../components/dashboard/WorkRequestCard';
 import PersonalDetailsCard from '../../components/dashboard/PersonalDetailsCard';
+import { supabase } from '../../../supabaseClient';
 
 
 
 const StaffDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   return (
     <div className="flex">

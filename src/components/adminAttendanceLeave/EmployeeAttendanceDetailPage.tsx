@@ -126,6 +126,16 @@ const getCurrentWeekDates = () => {
         const checkOutLong = dbEntry.check_out_longitudes?.[0] ?? null;
         const status = dbEntry.attendance_statuses?.[0] || 'Absent';
 
+        // Show request outcome if present
+        let requestOutcome = '';
+        if (dbEntry.request_outcome) {
+          requestOutcome = dbEntry.request_outcome; // e.g. 'APPROVED', 'REJECTED'
+        } else if (dbEntry.leave_status) {
+          requestOutcome = dbEntry.leave_status;
+        } else if (dbEntry.wfh_status) {
+          requestOutcome = dbEntry.wfh_status;
+        }
+
         transformed.push({
           day: weekday,
           date: dbEntry.attendance_date,
@@ -134,6 +144,7 @@ const getCurrentWeekDates = () => {
           status,
           checkInLocation: checkInLat && checkInLong ? { lat: checkInLat, long: checkInLong } : null,
           checkOutLocation: checkOutLat && checkOutLong ? { lat: checkOutLat, long: checkOutLong } : null,
+          requestOutcome,
         });
       } else {
         transformed.push({
@@ -144,6 +155,7 @@ const getCurrentWeekDates = () => {
           status: isWeekend ? 'Approved Off' : isFuture ? 'Incomplete' : 'Absent',
           checkInLocation: null,
           checkOutLocation: null,
+          requestOutcome: '',
         });
       }
     }
@@ -229,7 +241,20 @@ const getCurrentWeekDates = () => {
 </td>
 
       <td className="py-2 px-3">{item.hoursWorked}</td>
-      <td className="py-2 px-3 rounded-r-lg">{item.status}</td>
+      <td className="py-2 px-3 rounded-r-lg">
+        {item.status}
+        {item.requestOutcome && (
+          <span className={
+            item.requestOutcome === 'REJECTED'
+              ? 'ml-2 px-2 py-1 rounded bg-red-200 text-red-700 text-xs font-semibold'
+              : item.requestOutcome === 'APPROVED'
+              ? 'ml-2 px-2 py-1 rounded bg-green-200 text-green-700 text-xs font-semibold'
+              : 'ml-2 px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold'
+          }>
+            {item.requestOutcome}
+          </span>
+        )}
+      </td>
     </tr>
   ))}
 </tbody>
