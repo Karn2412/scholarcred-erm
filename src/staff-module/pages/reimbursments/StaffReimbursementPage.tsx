@@ -1,32 +1,109 @@
 // src/pages/staff/ReimbursementPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../../components/common/Header';
 import StaffSidebar from '../../components/common/StaffSidebar';
 import ReimbursementTable from '../../components/staff reimbursement/StaffReimbursementTable';
-
+import { supabase } from '../../../supabaseClient';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ReimbursementPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="flex  bg-blue-50 min-h-screen">
-      <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+  // Form state
+  const [type, setType] = useState('');
+  const [expenseDate, setExpenseDate] = useState('');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [file, setFile] = useState<File | null>(null);
 
+  // Refresh trigger for table
+  const [refresh, setRefresh] = useState(0);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth?.user?.id;
+      if (!userId) {
+        toast.error("Not logged in");
+        return;
+      }
+
+      // Get company_id
+      const { data: userData, error: userErr } = await supabase
+        .from("users")
+        .select("company_id")
+        .eq("id", userId)
+        .single();
+      if (userErr) throw userErr;
+
+      let receiptUrl: string | null = null;
+
+      // Upload proof if file is chosen
+      if (file) {
+        const filePath = `${userId}/${Date.now()}_${file.name}`;
+        const { error: uploadErr } = await supabase.storage
+          .from("reimbursements")
+          .upload(filePath, file);
+        if (uploadErr) throw uploadErr;
+
+        const { data: publicUrl } = supabase.storage
+          .from("reimbursements")
+          .getPublicUrl(filePath);
+        receiptUrl = publicUrl.publicUrl;
+      }
+
+      const { error } = await supabase.from("reimbursements").insert([
+        {
+          company_id: userData.company_id,
+          user_id: userId,
+          expense_date: expenseDate,
+          category: type,
+          description,
+          amount: Number(amount),
+          receipt_url: receiptUrl,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success("Reimbursement submitted");
+      setType("");
+      setExpenseDate("");
+      setAmount("");
+      setDescription("");
+      setFile(null);
+      setRefresh(r => r + 1); // trigger table refresh
+    } catch (err: any) {
+      console.error("❌ Submit reimbursement", err);
+      toast.error("Failed to submit reimbursement");
+    }
+  }
+
+  return (
+    <div className="flex bg-blue-50 min-h-screen">
+      <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-col w-full">
         <Header />
-
         <main className="p-6">
+          <Toaster />
+
           {/* Form Section */}
-          <div className="bg-white p-6 rounded-3xl shadow-md">
+          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl shadow-md">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">
                   Type of Reimbursement <span className="text-red-500">*</span>
                 </label>
-                <select className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none">
-                  <option>Please pick a type</option>
-                  <option>Travel</option>
-                  <option>Supplies</option>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none"
+                  required
+                >
+                  <option value="">Please pick a type</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Supplies">Supplies</option>
                 </select>
               </div>
 
@@ -34,14 +111,26 @@ const ReimbursementPage: React.FC = () => {
                 <label className="block text-sm font-medium mb-1 text-gray-700">
                   Expense Date <span className="text-red-500">*</span>
                 </label>
-                <input type="date" className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none" />
+                <input
+                  type="date"
+                  value={expenseDate}
+                  onChange={(e) => setExpenseDate(e.target.value)}
+                  required
+                  className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700">
                   Amount <span className="text-red-500">*</span>
                 </label>
-                <input type="number" placeholder="XXXXXXXXXXXX" className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none" />
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  className="w-full border border-blue-400 rounded-full px-4 py-2 text-sm outline-none"
+                />
               </div>
             </div>
 
@@ -49,33 +138,40 @@ const ReimbursementPage: React.FC = () => {
               <label className="block text-sm font-medium mb-1 text-gray-700">
                 Description <span className="text-red-500">*</span>
               </label>
-              <textarea className="w-full border border-blue-400 rounded-2xl px-4 py-2 text-sm outline-none" rows={3} placeholder="Description..." />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                className="w-full border border-blue-400 rounded-2xl px-4 py-2 text-sm outline-none"
+                rows={3}
+                placeholder="Description..."
+              />
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1 text-gray-700">
-                Upload Listed Documents <span className="text-red-500">*</span>
+                Upload Proof
               </label>
-              <div className="flex items-center gap-3">
-                <button className="bg-blue-500 text-white px-4 py-2 text-sm rounded-full hover:bg-blue-600">
-                  Upload Files
-                </button>
-                <div className="bg-blue-100 px-3 py-1 rounded-full text-sm text-blue-700">
-                  Image2347.jpg <span className="ml-2 cursor-pointer">&#10005;</span>
-                </div>
-              </div>
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="text-sm"
+              />
             </div>
 
             <div className="text-end">
-              <button className="bg-green-600 text-white px-6 py-2 text-sm rounded-full hover:bg-green-700">
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 text-sm rounded-full hover:bg-green-700"
+              >
                 Apply For Reimbursement
               </button>
             </div>
-          </div>
+          </form>
 
           {/* Table Section */}
           <div className="mt-6">
-            <ReimbursementTable />
+            <ReimbursementTable refresh={refresh} />
           </div>
         </main>
       </div>
