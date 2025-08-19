@@ -1,5 +1,5 @@
 // src/pages/staff/ReimbursementPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '../../../components/common/Header';
 import StaffSidebar from '../../components/common/StaffSidebar';
 import ReimbursementTable from '../../components/staff reimbursement/StaffReimbursementTable';
@@ -16,7 +16,6 @@ const ReimbursementPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
-  // Refresh trigger for table
   const [refresh, setRefresh] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -29,7 +28,7 @@ const ReimbursementPage: React.FC = () => {
         return;
       }
 
-      // Get company_id
+      // get company_id
       const { data: userData, error: userErr } = await supabase
         .from("users")
         .select("company_id")
@@ -37,22 +36,23 @@ const ReimbursementPage: React.FC = () => {
         .single();
       if (userErr) throw userErr;
 
-      let receiptUrl: string | null = null;
+      let receiptPath: string | null = null;
 
-      // Upload proof if file is chosen
+      // Upload proof if provided
       if (file) {
         const filePath = `${userId}/${Date.now()}_${file.name}`;
         const { error: uploadErr } = await supabase.storage
-          .from("reimbursements")
-          .upload(filePath, file);
-        if (uploadErr) throw uploadErr;
+          .from("reimbursement") // ✅ correct bucket
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-        const { data: publicUrl } = supabase.storage
-          .from("reimbursements")
-          .getPublicUrl(filePath);
-        receiptUrl = publicUrl.publicUrl;
+        if (uploadErr) throw uploadErr;
+        receiptPath = filePath; // store path only
       }
 
+      // Insert into DB
       const { error } = await supabase.from("reimbursements").insert([
         {
           company_id: userData.company_id,
@@ -61,19 +61,20 @@ const ReimbursementPage: React.FC = () => {
           category: type,
           description,
           amount: Number(amount),
-          receipt_url: receiptUrl,
+          receipt_url: receiptPath, // store path only
+          status: "PENDING",
         },
       ]);
 
       if (error) throw error;
 
-      toast.success("Reimbursement submitted");
+      toast.success("Reimbursement submitted ✅");
       setType("");
       setExpenseDate("");
       setAmount("");
       setDescription("");
       setFile(null);
-      setRefresh(r => r + 1); // trigger table refresh
+      setRefresh(r => r + 1);
     } catch (err: any) {
       console.error("❌ Submit reimbursement", err);
       toast.error("Failed to submit reimbursement");
@@ -88,7 +89,7 @@ const ReimbursementPage: React.FC = () => {
         <main className="p-6">
           <Toaster />
 
-          {/* Form Section */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl shadow-md">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -169,7 +170,7 @@ const ReimbursementPage: React.FC = () => {
             </div>
           </form>
 
-          {/* Table Section */}
+          {/* Table */}
           <div className="mt-6">
             <ReimbursementTable refresh={refresh} />
           </div>

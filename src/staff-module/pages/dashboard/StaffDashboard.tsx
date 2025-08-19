@@ -33,7 +33,7 @@ const StaffDashboard = () => {
             <WorkRequestCard />
           </div>
 
-          <PersonalDetailsCard />
+          {/* <PersonalDetailsCard /> */}
         </div>
       </div>
     </div>

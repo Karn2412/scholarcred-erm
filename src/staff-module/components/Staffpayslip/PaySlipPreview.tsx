@@ -1,17 +1,60 @@
-import React from 'react';
-import { FaTimes, FaSearchPlus, FaExpandArrowsAlt, FaDownload } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaTimes, FaDownload } from 'react-icons/fa';
+import jsPDF from 'jspdf';
 
 interface PayslipPreviewModalProps {
   onClose: () => void;
+  month: string;
+  employeeName: string;
+  salary: number;
+  reimbursements: number;
+  deductions: number;
+  incentives: number;
+  totalPay: number;
 }
 
-const PayslipPreviewModal: React.FC<PayslipPreviewModalProps> = ({ onClose }) => {
+const PayslipPreviewModal: React.FC<PayslipPreviewModalProps> = ({
+  onClose,
+  month,
+  employeeName,
+  salary,
+  reimbursements,
+  deductions,
+  incentives,
+  totalPay,
+}) => {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Payslip", 105, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Employee: ${employeeName}`, 20, 40);
+    doc.text(`Month: ${month}`, 20, 50);
+
+    doc.text(`Base Salary: ₹${salary}`, 20, 70);
+    doc.text(`Incentives: ₹${incentives}`, 20, 80);
+    doc.text(`Reimbursements: ₹${reimbursements}`, 20, 90);
+    doc.text(`Deductions: ₹${deductions}`, 20, 100);
+
+    doc.setFontSize(14);
+    doc.text(`Net Pay: ₹${totalPay}`, 20, 120);
+
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    setPdfUrl(url);
+
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [month, employeeName, salary, reimbursements, deductions, incentives, totalPay]);
+
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-    >
-      <div className="bg-white rounded-2xl p-4 w-full max-w-md relative">
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+      <div className="bg-white rounded-2xl p-4 w-full max-w-2xl relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -20,30 +63,23 @@ const PayslipPreviewModal: React.FC<PayslipPreviewModalProps> = ({ onClose }) =>
           <FaTimes />
         </button>
 
-        {/* Modal Title */}
-        <h2 className="text-md font-semibold text-gray-800 mb-4 ps-2">Payslip Preview</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Payslip Preview</h2>
 
-        {/* Preview Area */}
-        <div className="bg-gray-200 rounded-2xl h-96 relative flex items-center justify-center text-gray-400 text-sm">
-          {/* Placeholder */}
-          <span>PDF Preview Placeholder</span>
+        {/* PDF Preview */}
+        {pdfUrl ? (
+          <iframe src={pdfUrl} className="w-full h-96 border rounded-md" />
+        ) : (
+          <p>Loading preview...</p>
+        )}
 
-          {/* Floating Action Buttons */}
-          <div className="absolute right-4 top-1/3 flex flex-col space-y-3">
-            <button className="bg-blue-100 p-2 rounded shadow-sm hover:bg-blue-200">
-              <FaSearchPlus size={16} className="text-gray-700" />
-            </button>
-            <button className="bg-white border p-2 rounded shadow-sm hover:bg-gray-100">
-              <FaExpandArrowsAlt size={16} className="text-gray-700" />
-            </button>
-          </div>
-        </div>
-
-        {/* Download Button */}
         <div className="flex justify-center mt-4">
-          <button className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-green-700">
+          <a
+            href={pdfUrl || '#'}
+            download={`Payslip_${month}.pdf`}
+            className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-green-700"
+          >
             Download <FaDownload size={14} />
-          </button>
+          </a>
         </div>
       </div>
     </div>

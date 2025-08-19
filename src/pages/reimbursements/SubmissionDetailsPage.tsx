@@ -1,16 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import EmployeeDetailsCard from '../../components/reimbursements/EmployeeDetailsCard';
 import SubmissionTable from '../../components/reimbursements/SubmissionTable';
 import { useParams } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 
 
 
 const SubmissionDetailsPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
    const { employeeId } = useParams<{ employeeId: string }>();
-    
+const [reimbursements, setReimbursements] = useState<SubmissionItem[]>([]);
+
+useEffect(() => {
+  async function fetchSubmissions() {
+    const { data, error } = await supabase
+      .from("reimbursements")
+      .select("id, category, expense_date, description, amount, receipt_url, status")
+      .eq("user_id", employeeId)
+      .order("expense_date", { ascending: false });
+
+    if (error) {
+      console.error("❌ fetch submissions", error);
+      return;
+    }
+
+    setReimbursements(
+      (data || []).map((r, i) => ({
+        id: r.id,
+        type: r.category,
+        date: r.expense_date,
+        description: r.description,
+        amount: r.amount,
+        proof: r.receipt_url,
+        status: r.status,
+      }))
+    );
+  }
+
+  fetchSubmissions();
+}, [employeeId]);
+
    
       
 
@@ -34,7 +65,7 @@ const SubmissionDetailsPage: React.FC = () => {
           />
 
           {/* Table */}
-          <SubmissionTable />
+          <SubmissionTable data={reimbursements} />
           </div>
            
         </div>
