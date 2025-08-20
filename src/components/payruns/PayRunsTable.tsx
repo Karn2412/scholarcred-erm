@@ -31,17 +31,18 @@ const PayRunsTable: React.FC = () => {
         // ✅ fetch live payroll (current month)
         const { data: liveData, error: liveErr } = await supabase
           .from("monthly_payroll_view")
-          .select(`
-            user_id,
-            employee_name,
-            monthly_ctc,
-            base_pay,
-            deductions,
-            incentives,
-            reimbursements,
-            total_pay,
-            month
-          `);
+.select(`
+  user_id,
+  employee_name,
+  monthly_ctc,
+  base_pay,
+  deductions,
+  incentives,
+  reimbursements,
+  total_pay,
+  month
+`)
+
 
         if (liveErr) {
           console.error("❌ Live payroll error:", liveErr);
