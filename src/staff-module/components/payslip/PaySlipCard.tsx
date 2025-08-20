@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaDownload } from 'react-icons/fa';
 import PayslipPreviewModal from '../Staffpayslip/PaySlipPreview';
-import jsPDF from 'jspdf';
+import { supabase } from '../../../supabaseClient';
+import { fillTemplate } from '../../../utils/filledtemplate';
+
 
 interface PaySlipCardProps {
   month: string;
@@ -25,35 +27,39 @@ const PaySlipCard: React.FC<PaySlipCardProps> = ({
   totalPay = 53500
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [templateHtml, setTemplateHtml] = useState<string>("");
 
-  const handlePreviewClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowModal(true);
-  };
+  // fetch default payslip template
+  useEffect(() => {
+    const fetchTemplate = async () => {
+      const { data, error } = await supabase
+        .from("templates")
+        .select("html_content")
+        .eq("category", "Regular Payslips")
+        .eq("is_default", true)
+        .single();
+      if (data) setTemplateHtml(data.html_content);
+      if (error) console.error("Template fetch error:", error.message);
+    };
+    fetchTemplate();
+  }, []);
 
+  const handlePreviewClick = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
-  // 🔹 Generate Payslip PDF
-  const handleDownload = () => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("Payslip", 105, 20, { align: "center" });
-
-    doc.setFontSize(12);
-    doc.text(`Employee: ${employeeName}`, 20, 40);
-    doc.text(`Month: ${month}`, 20, 50);
-
-    doc.text(`Base Salary: ₹${salary}`, 20, 70);
-    doc.text(`Incentives: ₹${incentives}`, 20, 80);
-    doc.text(`Reimbursements: ₹${reimbursements}`, 20, 90);
-    doc.text(`Deductions: ₹${deductions}`, 20, 100);
-
-    doc.setFontSize(14);
-    doc.text(`Net Pay: ₹${totalPay}`, 20, 120);
-
-    doc.save(`Payslip_${month}.pdf`);
-  };
+  // fill template with real data
+  const filledTemplate = templateHtml
+    ? fillTemplate(templateHtml, {
+        employee_name: employeeName,
+        employee_id: "EMP001",
+        month,
+        base_pay: salary,
+        incentives,
+        reimbursements,
+        deductions,
+        net_pay: totalPay,
+      })
+    : "";
 
   return (
     <div
@@ -73,8 +79,9 @@ const PaySlipCard: React.FC<PaySlipCardProps> = ({
           >
             Preview
           </button>
+
           <button
-            onClick={handleDownload}
+            onClick={() => setShowModal(true)}
             className="bg-green-500 text-white px-4 py-1 rounded-full text-sm flex items-center gap-2"
           >
             <FaDownload /> Download
@@ -84,12 +91,7 @@ const PaySlipCard: React.FC<PaySlipCardProps> = ({
             <PayslipPreviewModal
               onClose={handleCloseModal}
               month={month}
-              employeeName={employeeName}
-              salary={salary}
-              reimbursements={reimbursements}
-              deductions={deductions}
-              incentives={incentives}
-              totalPay={totalPay}
+              htmlContent={filledTemplate}
             />
           )}
         </>

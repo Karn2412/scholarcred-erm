@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { useUser } from '../../context/UserContext';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { userData } = useUser(); // 👈 get userData from context
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -14,19 +16,19 @@ const Header = () => {
 
   // Logout function
   const handleLogout = async () => {
-     const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error('Logout error:', error.message);
-  } else {
-    console.log('User logged out');
-    navigate('/login'); // or wherever your login page is
-  }
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Logout error:', error.message);
+    } else {
+      localStorage.removeItem('userData'); // clear cached data
+      navigate('/login');
+    }
   };
 
   // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: any) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !(dropdownRef.current as any).contains(event.target)) {
         setDropdownOpen(false);
       }
     };
@@ -88,8 +90,8 @@ const Header = () => {
               className="rounded-full w-[30px] h-[30px]"
             />
             <div>
-              <p className="text-sm font-medium">Robert Shah</p>
-              <p className="text-xs text-gray-500">HR Admin</p>
+              <p className="text-sm font-medium">{userData?.name || 'Loading...'}</p>
+              <p className="text-xs text-gray-500">{userData?.role || 'User'}</p>
             </div>
           </div>
 

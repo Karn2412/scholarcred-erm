@@ -12,6 +12,7 @@ interface PayRun {
   incentives: number;
   reimbursements: number;
   total_pay: number;
+  source: "Live" | "History";
 }
 
 const PayRunsTable: React.FC = () => {
@@ -22,39 +23,80 @@ const PayRunsTable: React.FC = () => {
 
   useEffect(() => {
     const fetchPayRuns = async () => {
-      // ✅ Fetch everything including adjustments
-      const { data, error } = await supabase
-        .from("monthly_payroll_view")
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7); // YYYY-MM
 
-        .select(`
-          user_id,
-          employee_name,
-          monthly_ctc,
-          base_pay,
-          deductions,
-          incentives,
-          reimbursements,
-          total_pay
-        `)
-        .eq("month", `${selectedMonth}-01`); // filter by selected month
+      // 🔑 if selected month is current → live, else → history
+      if (selectedMonth === currentMonth) {
+        // ✅ fetch live payroll (current month)
+        const { data: liveData, error: liveErr } = await supabase
+          .from("monthly_payroll_view")
+          .select(`
+            user_id,
+            employee_name,
+            monthly_ctc,
+            base_pay,
+            deductions,
+            incentives,
+            reimbursements,
+            total_pay,
+            month
+          `);
 
-      if (error) {
-        console.error("❌ Error fetching pay runs:", error);
-        return;
+        if (liveErr) {
+          console.error("❌ Live payroll error:", liveErr);
+          return;
+        }
+
+        const formatted = (liveData || []).map((item: any) => ({
+          id: item.user_id,
+          user_id: item.user_id,
+          employee_name: item.employee_name,
+          salary: item.monthly_ctc,
+          deductions: item.deductions || 0,
+          incentives: item.incentives || 0,
+          reimbursements: item.reimbursements || 0,
+          total_pay: item.total_pay,
+          source: "Live" as const,
+        }));
+
+        setPayRunsData(formatted);
+      } else {
+        // ✅ fetch history payroll (saved months)
+        const { data: historyData, error: histErr } = await supabase
+          .from("payroll_history_view")
+          .select(`
+            user_id,
+            employee_name,
+            month,
+            monthly_ctc,
+            base_pay,
+            deductions,
+            incentives,
+            reimbursements,
+            total_pay
+          `)
+          .eq("month", `${selectedMonth}-01`);
+
+        if (histErr) {
+          console.error("❌ History payroll error:", histErr);
+          return;
+        }
+
+        const formatted = (historyData || []).map((item: any) => ({
+          id: item.user_id,
+          user_id: item.user_id,
+          employee_name: item.employee_name,
+          salary: item.monthly_ctc,
+          deductions: item.deductions || 0,
+          incentives: item.incentives || 0,
+          reimbursements: item.reimbursements || 0,
+          total_pay: item.total_pay,
+          source: "History" as const,
+        }));
+
+        setPayRunsData(formatted);
       }
-
-      const formatted = data.map((item: any) => ({
-        id: item.user_id,
-        user_id: item.user_id,
-        employee_name: item.employee_name,
-        salary: item.monthly_ctc,
-        deductions: item.deductions || 0,
-        incentives: item.incentives || 0,
-        reimbursements: item.reimbursements || 0,
-        total_pay: item.total_pay
-      }));
-
-      setPayRunsData(formatted);
     };
 
     fetchPayRuns();
@@ -105,7 +147,10 @@ const PayRunsTable: React.FC = () => {
                 <td className="py-3 px-3 rounded-r-md">
                   <button
                     onClick={() => handleViewMore(item.user_id)}
-                    className="text-gray-600 hover:text-black"
+                    className={`text-gray-600 hover:text-black ${
+                      item.source === "History" ? "opacity-40 cursor-not-allowed" : ""
+                    }`}
+                    disabled={item.source === "History"}
                   >
                     <FaEye />
                   </button>

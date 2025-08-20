@@ -3,12 +3,33 @@ import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import TemplateSidebar from '../../components/templates/TemplateSidebar';
 import TemplatePreviewCard from '../../components/templates/TemplatePreviewCard';
+import { supabase } from '../../supabaseClient';
+
+
 
 const TemplatesPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState('Regular Payslips');
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
+
+useEffect(() => {
+  const fetchTemplates = async () => {
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching templates:', error);
+    } else {
+      setTemplates(data);
+    }
+  };
+
+  fetchTemplates();
+}, []);
 
   // Close cards when clicking outside
   useEffect(() => {
@@ -45,22 +66,24 @@ const TemplatesPage: React.FC = () => {
             {/* Left Sidebar */}
             <TemplateSidebar activeTemplate={activeTemplate} onSelect={setActiveTemplate} />
 
-            {/* Right Section - Template Previews */}
-            <div className="md:col-span-2 h-125 bg-gray-100 rounded-lg p-6 flex justify-around">
-              <TemplatePreviewCard
-                id={1}
-                title="Standard Template"
-                isDefault
-                isSelected={selectedCard === 1}
-                onSelect={() => setSelectedCard(1)}
-              />
-              <TemplatePreviewCard
-                id={2}
-                title="Simplified Template"
-                isSelected={selectedCard === 2}
-                onSelect={() => setSelectedCard(2)}
-              />
-            </div>
+         {/* Right Section - Template Previews */}
+<div className="md:col-span-2 h-125 bg-gray-100 rounded-lg p-6 flex justify-around flex-wrap gap-4">
+  {templates
+    .filter((tpl) => tpl.category === activeTemplate) // 👈 show only templates in selected category
+    .map((tpl) => (
+      <TemplatePreviewCard
+        key={tpl.id}
+        id={tpl.id}
+        title={tpl.name}
+        isDefault={tpl.is_default}
+        isSelected={selectedCard === tpl.id}
+        onSelect={() => setSelectedCard(tpl.id)}
+        htmlContent={tpl.html_content}
+      />
+    ))}
+</div>
+
+
           </div>
         </div>
       </div>

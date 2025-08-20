@@ -8,6 +8,7 @@ interface TemplatePreviewCardProps {
   isDefault?: boolean;
   isSelected: boolean;
   onSelect: () => void;
+  htmlContent: string; // 👈 add this
 }
 
 const TemplatePreviewCard: React.FC<TemplatePreviewCardProps> = ({
@@ -15,18 +16,19 @@ const TemplatePreviewCard: React.FC<TemplatePreviewCardProps> = ({
   isDefault,
   isSelected,
   onSelect,
+  htmlContent,
 }) => {
-    
   const [showModal, setShowModal] = useState(false);
 
   const handlePreviewClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click trigger
+    e.stopPropagation(); 
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
   return (
     <div className="flex flex-col items-center">
       <div
@@ -50,9 +52,10 @@ const TemplatePreviewCard: React.FC<TemplatePreviewCardProps> = ({
         {/* Buttons when selected */}
         {isSelected && (
           <div className="flex flex-col items-center justify-center h-full space-y-4">
-            <button 
-             onClick={handlePreviewClick}
-            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-full w-44">
+            <button
+              onClick={handlePreviewClick}
+              className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-full w-44"
+            >
               <FaEye /> Preview Template
             </button>
             <button className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full w-44">
@@ -63,7 +66,11 @@ const TemplatePreviewCard: React.FC<TemplatePreviewCardProps> = ({
       </div>
 
       <p className="mt-2 text-sm">{title}</p>
-      {showModal && <TemplatePreviewModal onClose={handleCloseModal} />}
+
+      {/* Modal with preview content */}
+      {showModal && (
+        <TemplatePreviewModal onClose={handleCloseModal} htmlContent={htmlContent} />
+      )}
     </div>
   );
 };

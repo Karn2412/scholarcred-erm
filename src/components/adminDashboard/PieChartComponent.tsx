@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -6,21 +6,45 @@ import {
   Tooltip,
   ResponsiveContainer,
   type PieLabelRenderProps,
-} from 'recharts';
+} from "recharts";
+import { supabase } from "../../supabaseClient";
+import { useUser } from "../../context/UserContext";
 
-const COLORS = ['#b4fff3', '#a394f7'];
+const COLORS = ["#b4fff3", "#a394f7"];
 
 const PieChartComponent: React.FC = () => {
   const [data, setData] = useState<{ name: string; value: number }[]>([]);
+  const { userData } = useUser();
 
   useEffect(() => {
-    setTimeout(() => {
-      setData([
-        { name: 'Men', value: 2480 },
-        { name: 'Women', value: 2380 },
-      ]);
-    }, 300);
-  }, []);
+    const fetchGenderData = async () => {
+      if (!userData?.company_id) return;
+
+const { data, error } = await supabase
+  .from("users_gender_count")
+  .select("gender, value")
+  .eq("company_id", userData.company_id);
+
+if (error) {
+  console.error("❌ Error fetching gender stats:", error);
+  return;
+}
+
+const formatted =
+  data?.map((row: any) => {
+    const g = (row.gender || "").toLowerCase();
+    return {
+      name: g === "male" ? "Men" : g === "female" ? "Women" : "Other",
+      value: row.value,
+    };
+  }) || [];
+
+setData(formatted);
+
+    };
+
+    fetchGenderData();
+  }, [userData?.company_id]);
 
   const renderCustomLabel = ({
     cx = 0,
@@ -32,10 +56,10 @@ const PieChartComponent: React.FC = () => {
     index = 0,
   }: PieLabelRenderProps) => {
     const RADIAN = Math.PI / 180;
-const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;
-const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
-const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
-
+    const radius =
+      Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;
+    const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
+    const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
 
     const label = data[index];
     if (!label) return null;
@@ -47,13 +71,13 @@ const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
         fill="#000"
         textAnchor="middle"
         dominantBaseline="central"
-        style={{ fontSize: '14px', fontWeight: '500' }}
+        style={{ fontSize: "14px", fontWeight: "500" }}
       >
         {label.name}
-        <tspan x={x} dy={18} style={{ fontSize: '12px', fontWeight: 'normal' }}>
+        <tspan x={x} dy={18} style={{ fontSize: "12px", fontWeight: "normal" }}>
           {label.value}
         </tspan>
-        <tspan x={x} dy={16} style={{ fontSize: '12px', fontWeight: 'normal' }}>
+        <tspan x={x} dy={16} style={{ fontSize: "12px", fontWeight: "normal" }}>
           {(percent * 100).toFixed(2)}%
         </tspan>
       </text>
@@ -91,11 +115,11 @@ const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
       {/* Stats Box */}
       <div className="w-full md:w-[280px] mt-6 md:mt-0 md:ml-4 text-sm">
         <p>
-          <span className="font-semibold">Female workforce</span> has grown by{' '}
+          <span className="font-semibold">Female workforce</span> has grown by{" "}
           <span className="font-bold">18%</span> in the past 6 months.
         </p>
         <p className="mt-2">
-          Male employee count remained steady, with a marginal growth of{' '}
+          Male employee count remained steady, with a marginal growth of{" "}
           <span className="font-bold">2.5%</span> over the last quarter.
         </p>
       </div>

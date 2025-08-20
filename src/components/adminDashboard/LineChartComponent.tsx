@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -7,30 +7,56 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
+import { supabase } from "../../supabaseClient";
+import { useUser } from "../../context/UserContext"; // assuming you have this
 
-const LineChartComponent = () => {
-  const [data, setData] = useState<{ month: string; payroll: number }[]>([]);
+interface PayrollData {
+  month: string;
+  payroll: number;
+}
 
+const LineChartComponent: React.FC = () => {
+  const [data, setData] = useState<PayrollData[]>([]);
+  const { userData } = useUser(); // contains company_id
 
   useEffect(() => {
-    setTimeout(() => {
-      setData([
-        { month: 'Dec', payroll: 120000 },
-        { month: 'Jan', payroll: 110000 },
-        { month: 'Feb', payroll: 150000 },
-        { month: 'Mar', payroll: 115000 },
-        { month: 'Apr', payroll: 108000 },
-        { month: 'May', payroll: 102000 },
-        { month: 'Jun', payroll: 130000 },
-        { month: 'Jul', payroll: 140000 },
-        { month: 'Aug', payroll: 155000 },
-        { month: 'Sep', payroll: 170000 },
-        { month: 'Oct', payroll: 150000 },
-        { month: 'Nov', payroll: 125000 },
-      ]);
-    }, 300);
-  }, []);
+    const fetchPayrollHistory = async () => {
+      if (!userData?.company_id) return;
+
+      // fetch payroll history for the company
+      const { data, error } = await supabase
+        .from("payroll_history")
+        .select("month, total_pay")
+        .eq("company_id", userData.company_id)
+        .order("month", { ascending: true });
+
+      if (error) {
+        console.error("❌ Error fetching payroll history:", error);
+        return;
+      }
+
+      // aggregate by month (sum all employees)
+      const monthlyMap: Record<string, number> = {};
+      data?.forEach((row: any) => {
+        const monthKey = new Date(row.month).toLocaleString("default", {
+          month: "short",
+        });
+        monthlyMap[monthKey] =
+          (monthlyMap[monthKey] || 0) + Number(row.total_pay || 0);
+      });
+
+      // transform into recharts format
+      const formatted = Object.keys(monthlyMap).map((m) => ({
+        month: m,
+        payroll: monthlyMap[m],
+      }));
+
+      setData(formatted);
+    };
+
+    fetchPayrollHistory();
+  }, [userData?.company_id]);
 
   return (
     <div className="bg-gray-100 p-4 w-full h-[300px]">
@@ -46,11 +72,7 @@ const LineChartComponent = () => {
           <CartesianGrid stroke="#888" strokeDasharray="4 4" vertical={false} />
 
           <XAxis dataKey="month" />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 13 }}
-          />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13 }} />
 
           <Tooltip />
 
