@@ -37,7 +37,7 @@ useEffect(() => {
     }
 
     setReimbursements(
-      (data || []).map((r, i) => ({
+      (data || []).map((r, ) => ({
         id: String(r.id),
         type: r.category,
         date: r.expense_date,
