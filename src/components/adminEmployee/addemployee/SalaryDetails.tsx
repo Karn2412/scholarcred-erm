@@ -41,7 +41,7 @@ const SalaryDetailsForm: React.FC<SalaryDetailsFormProps> = ({ userId, companyId
       return;
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("salary_details")
       .insert([
         {

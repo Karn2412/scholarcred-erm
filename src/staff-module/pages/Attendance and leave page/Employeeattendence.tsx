@@ -1,5 +1,5 @@
 // Employeeattendence.tsx
-import React, { useEffect, useState } from 'react'
+import  { useEffect, useState } from 'react'
 import StaffSidebar from '../../components/common/StaffSidebar'
 import WorkRequestCard from '../../components/dashboard/WorkRequestCard'
 import TimeTrackerCard from '../../components/dashboard/Timetrackercard'
@@ -7,7 +7,7 @@ import Header from '../../../components/common/Header'
 import AttendanceWeeklyTable from '../../components/Attendence and leave/AttendanceWeeklyTable'
 import { supabase } from '../../../supabaseClient'
 import { useUser } from '../../../context/UserContext'
-import { format, endOfMonth, addDays, isBefore, isAfter } from 'date-fns'
+import { format, endOfMonth, addDays, isAfter } from 'date-fns'
 // import RegularizeModal from '../../components/modals/RegularizeModal' // adjust path if you want to show the modal here
 
 interface AttendanceRecord {
@@ -27,14 +27,14 @@ const EmployeeAttendancePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly')
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([])
-  const [loading, setLoading] = useState(true)
+  
 
   const today = new Date()
   const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth())
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear())
 
   // For opening your Regularize modal from the table:
-  const [regularizeDate, setRegularizeDate] = useState<string | null>(null)
+  const [, setRegularizeDate] = useState<string | null>(null)
 
   const getColorBorder = (status: string) => {
     switch (status) {
@@ -65,7 +65,7 @@ const EmployeeAttendancePage = () => {
     if (!userId) return;
 
     const fetchAttendance = async () => {
-      setLoading(true);
+      
 
       const startDate = format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
       const endDate = format(endOfMonth(new Date(selectedYear, selectedMonth)), 'yyyy-MM-dd');
@@ -193,13 +193,13 @@ const EmployeeAttendancePage = () => {
       }
 
       setAttendanceData(transformed);
-      setLoading(false);
+      
     };
 
     fetchAttendance();
   }, [userId, selectedMonth, selectedYear]);
 
-  if (loading) return <div>Loading attendance...</div>;
+   
 
   return (
     <div className="flex bg-blue-50 min-h-screen">

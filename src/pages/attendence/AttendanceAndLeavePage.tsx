@@ -5,7 +5,7 @@ import Sidebar from '../../components/common/Sidebar';
 import AttendanceFilterAndLegend from '../../components/adminAttendanceLeave/AttendanceFilterAndLegend';
 import AttendanceTable from '../../components/adminAttendanceLeave/AttendanceTable';
 import { supabase } from '../../supabaseClient';
-import { format } from 'date-fns';
+
 
 const AttendanceAndLeavePage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

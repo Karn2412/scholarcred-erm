@@ -25,11 +25,11 @@ const EmployeeAttendanceDetailPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const today = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
-  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [selectedMonth] = useState(today.getMonth());
+  const [selectedYear] = useState(today.getFullYear());
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+ 
 
   const getCurrentWeekDates = () => {
     const start = startOfWeek(today, { weekStartsOn: 1 });
@@ -70,7 +70,7 @@ const EmployeeAttendanceDetailPage: React.FC = () => {
     if (!userId) return;
 
     const fetchAttendance = async () => {
-      setLoading(true);
+      
 
       const startDate = format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
       const endDate = format(endOfMonth(new Date(selectedYear, selectedMonth)), 'yyyy-MM-dd');
@@ -86,7 +86,7 @@ const EmployeeAttendanceDetailPage: React.FC = () => {
       if (error) {
         console.error('Error fetching attendance:', error);
         setAttendanceData([]);
-        setLoading(false);
+      
         return;
       }
 
@@ -145,7 +145,7 @@ const EmployeeAttendanceDetailPage: React.FC = () => {
       }
 
       setAttendanceData(transformed);
-      setLoading(false);
+      
     };
 
     fetchAttendance();

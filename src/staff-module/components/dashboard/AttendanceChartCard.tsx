@@ -38,32 +38,22 @@ const AttendanceChartCard: React.FC<Props> = ({ present, absent }) => {
 
             <Label
               position="center"
-              content={({ viewBox: { cx, cy } }) => (
-                <text
-                  x={cx}
-                  y={cy}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                >
-                  <tspan
-                    x={cx}
-                    dy="-0.5em"
-                    fontSize="16"
-                    fontWeight="600"
-                    fill="#111"
-                  >
-                    {present.toFixed(0)}%
-                  </tspan>
-                  <tspan
-                    x={cx}
-                    dy="1.4em"
-                    fontSize="12"
-                    fill="#555"
-                  >
-                    Present
-                  </tspan>
-                </text>
-              )}
+              content={({ cx, cy,  }) => {
+  if (cx == null || cy == null) return null;
+  return (
+    <text
+      x={cx}
+      y={cy}
+      textAnchor="middle"
+      dominantBaseline="middle"
+    >
+      <tspan x={cx} dy="-0.5em" fontSize="16" fontWeight="600" fill="#111">
+        {(present * 100).toFixed(0)}%
+      </tspan>
+    </text>
+  );
+}}
+
             />
           </Pie>
         </PieChart>

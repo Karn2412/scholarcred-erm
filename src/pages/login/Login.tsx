@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    const actualRole = roleData.roles?.role;
+    const actualRole = Array.isArray(roleData.roles) && roleData.roles.length > 0 ? roleData.roles[0].role : undefined;
 
     // ✅ Check if selected role matches actual role
     if (roleType === "admin" && actualRole !== "admin") {

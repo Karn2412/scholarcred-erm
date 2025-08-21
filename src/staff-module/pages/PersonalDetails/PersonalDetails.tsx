@@ -45,7 +45,7 @@ const handleSubmit = async () => {
   const sanitizedName = file.name.replace(/\s+/g, "_").replace(/[\[\]]/g, "");
   const path = `documents/${Date.now()}_${sanitizedName}`;
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from("usersdocuments")
     .upload(path, file, { cacheControl: "3600", upsert: true });
 

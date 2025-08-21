@@ -1,9 +1,9 @@
-import React, { type JSX } from 'react';
+
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 ;
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children:Element }) => {
   const { user } = useAuth();
 
   if (!user) {

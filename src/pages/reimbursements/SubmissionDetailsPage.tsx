@@ -6,6 +6,16 @@ import SubmissionTable from '../../components/reimbursements/SubmissionTable';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 
+interface SubmissionItem {
+  id: string;
+  type: string;
+  date: string;
+  description: string;
+  amount: number;
+  proof: string;
+  status: string;
+}
+
 
 
 const SubmissionDetailsPage: React.FC = () => {
@@ -28,7 +38,7 @@ useEffect(() => {
 
     setReimbursements(
       (data || []).map((r, i) => ({
-        id: r.id,
+        id: String(r.id),
         type: r.category,
         date: r.expense_date,
         description: r.description,

@@ -54,13 +54,21 @@ const ReimbursementTable: React.FC<Props> = ({ refresh }) => {
           const { data: signed } = await supabase.storage
             .from("reimbursement") // ✅ correct bucket
             .createSignedUrl(item.receipt_url, 60 * 60 * 24);
-          return { ...item, proofUrl: signed?.signedUrl };
+          return {
+            ...item,
+            receipt_path: item.receipt_url,
+            proofUrl: signed?.signedUrl,
+          };
         }
-        return { ...item, proofUrl: null };
+        return {
+          ...item,
+          receipt_path: item.receipt_url,
+          proofUrl: null,
+        };
       })
     );
 
-    setData(withUrls);
+    setData(withUrls as Reimbursement[]);
   }
 
   useEffect(() => {

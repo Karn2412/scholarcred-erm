@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { MdLocationOn, MdApartment } from 'react-icons/md';
 import { FaUserTie } from 'react-icons/fa';
 import { FiFilter } from 'react-icons/fi';

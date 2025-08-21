@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import PaySlipCard from "../../components/payslip/PaySlipCard";
 import StaffSidebar from "../../components/common/StaffSidebar";
 import Header from "../../../components/common/Header";

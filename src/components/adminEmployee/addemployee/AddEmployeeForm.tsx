@@ -67,7 +67,7 @@ const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({ onEmployeeCreated }) 
         alert("User role not found.");
         return;
       }
-      if (roleRecord.roles.role !== "admin") {
+      if (!roleRecord.roles || !Array.isArray(roleRecord.roles) || roleRecord.roles[0]?.role !== "admin") {
         alert("You are not an admin.");
         return;
       }

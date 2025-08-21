@@ -8,7 +8,7 @@ interface Props {
 }
 
 const OverviewCard: React.FC<Props> = ({ title, value, change, color }) => {
-   const [data, setData] = useState({
+   const [, setData] = useState({
     totalEmployees: 0,
     newJoinees: 0,
     exits: 0,

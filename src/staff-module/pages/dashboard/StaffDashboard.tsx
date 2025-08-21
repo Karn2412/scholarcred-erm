@@ -5,8 +5,7 @@ import TimeTrackerCard from '../../components/dashboard/Timetrackercard';
 import ReimbursementRequestCard from '../../components/dashboard/ReimbursementRequestCard';
 import AttendanceChartCard from '../../components/dashboard/AttendanceChartCard';
 import WorkRequestCard from '../../components/dashboard/WorkRequestCard';
-import PersonalDetailsCard from '../../components/dashboard/PersonalDetailsCard';
-import { supabase } from '../../../supabaseClient';
+
 
 
 

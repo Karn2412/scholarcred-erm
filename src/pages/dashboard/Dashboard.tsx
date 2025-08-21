@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from '../../components/common/Header';
 import OverviewCard from '../../components/adminDashboard/OverviewCard';
 import LineChartComponent from '../../components/adminDashboard/LineChartComponent';
