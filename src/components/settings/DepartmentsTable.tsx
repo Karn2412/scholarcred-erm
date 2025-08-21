@@ -1,23 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaDownload } from 'react-icons/fa';
+import { supabase } from '../../supabaseClient';
 import AddDepartmentModal from './modal/DepartementModal';
 
+interface Department {
+  id: string;
+  department_name: string;
+  department_code: string;
+  description: string | null;
+  employees?: number;
+}
+
 const DepartmentsTable: React.FC = () => {
-    const [showModal, setShowModal] = useState(false);
-  const departments = [
-    {
-      name: 'Education Loan Customer Support',
-      code: '-',
-      description: '-',
-      employees: '6',
-    },
-    {
-      name: 'Education Loan Customer Support',
-      code: '-',
-      description: '-',
-      employees: '-',
-    },
-  ];
+  const [showModal, setShowModal] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const adminId = session?.user?.id;
+      if (!adminId) return;
+
+      // get admin company_id
+      const { data: adminUser } = await supabase
+        .from('users')
+        .select('company_id')
+        .eq('id', adminId)
+        .single();
+
+      if (!adminUser?.company_id) return;
+
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, department_name, department_code, description')
+        .eq('company_id', adminUser.company_id);
+
+      if (error) {
+        console.error('Error fetching departments:', error);
+      } else {
+        setDepartments(data || []);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   return (
     <>
@@ -27,13 +55,12 @@ const DepartmentsTable: React.FC = () => {
         {/* Buttons */}
         <div className="flex space-x-2">
           <button
-          onClick={() => setShowModal(true)}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+            onClick={() => setShowModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
             Add Department
           </button>
-          <button className="bg-gray-100  border text-gray-600 px-3 py-2 rounded text-sm flex items-center">
+          <button className="bg-gray-100 border text-gray-600 px-3 py-2 rounded text-sm flex items-center">
             <FaDownload className="mr-1" />
-            
           </button>
         </div>
       </div>
@@ -45,31 +72,28 @@ const DepartmentsTable: React.FC = () => {
               <th className="py-2">Department Name</th>
               <th>Department Code</th>
               <th>Description</th>
-              <th>Total Employees</th>
             </tr>
           </thead>
           <tbody>
             {departments.map((dept, index) => (
               <tr
-                key={index}
-                className={`${
-                  index % 2 === 0 ? 'bg-blue-50' : 'bg-blue-100'
-                } hover:bg-blue-200 space-y-2.5 rounded-lg overflow-hidden`}
-                style={{ borderRadius: '0.5rem', marginBottom: '8px' }}
-              >
-                <td className="py-2">{dept.name}</td>
-                <td>{dept.code}</td>
-                <td>{dept.description}</td>
-                <td>{dept.employees}</td>
+                key={dept.id}
+                className={`${index % 2 === 0 ? 'bg-blue-50' : 'bg-blue-100'} hover:bg-blue-200`}>
+                <td className="py-2">{dept.department_name}</td>
+                <td>{dept.department_code}</td>
+                <td>{dept.description || '-'}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <AddDepartmentModal isOpen={showModal} onClose={() => setShowModal(false)} />
+        <AddDepartmentModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onDepartmentAdded={(dept) => setDepartments((prev) => [...prev, dept])}
+        />
       </div>
     </>
   );
 };
 
 export default DepartmentsTable;
- 

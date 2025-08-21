@@ -64,7 +64,7 @@ const LeaveRequestModal: React.FC<Props> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
       <div className="relative w-full max-w-4xl bg-white rounded-3xl p-8 shadow-xl">
         {/* Close Button */}
         <button
