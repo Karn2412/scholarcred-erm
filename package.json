@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+   
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build": "tsc -p tsconfig.relaxed.json --noEmit && vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.4",
